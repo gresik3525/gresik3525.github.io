@@ -184,8 +184,8 @@
     
     <!--====== ABOUT PART START ======-->
     
-								<section id="buku_tamu_pst" class="about-area pt-70">
-									<div class="container">
+								<section id="buku_tamu_pst" class="about-area pt-70 wow fadeInUp" data-wow-duration="1.3s" data-wow-delay="0.5s">
+									<div class="container" >
 										<div class="row">
 											
 										<form id="register" role="form" data-toggle="validator">
@@ -219,7 +219,7 @@
 																			</div>	
 																			
 																			
-																			<div class='col-md-6 col-xl-6'>
+																			<div class='col-md-3 col-xl-3'>
 																			<div class="form-group has-feedback">
 																				<label for="Jenis_Kelamin">Jenis Kelamin</label><br>
 																				
@@ -257,10 +257,10 @@
 																			</div>
 																			-->
 																			
-																			<div class='col-md-6 col-xl-6'>				
+																			<div class='col-md-3 col-xl-3'>				
 																			<div class="form-group has-feedback">
 																					<label for="Umur">Umur</label>
-																					<input type="number" class="form-control" id="Umur" name="Umur" placeholder="Masukkan Umur dalam tahun" 
+																					<input type="number" class="form-control" id="Umur" name="Umur" placeholder="Masukkan umur anda" 
 																					data-required-error="Wajib diisi" 
 																					required>
 																				
@@ -286,6 +286,17 @@
 																				 <option>S3</option>
 																				</select>
 																				<div class="help-block with-errors"></div>
+																				</div>
+																			</div>
+																			
+																			<div class="col-md-6 col-xl-6">
+																				<div class="form-group has-feedback"> 
+																					<label for="Alamat">Alamat</label>
+																					<input type="text" class="form-control" id="Alamat" name="Alamat" placeholder="Masukkan Alamat" data-minlength="3" 
+																					data-required-error="Wajib diisi" data-minlength-error="Minimal 3 Huruf" oninput="this.value = this.value.toUpperCase()"
+																					required>
+																					<span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+																					<div class="help-block with-errors"></div>
 																				</div>
 																			</div>
 										
@@ -343,8 +354,8 @@
 																			
 																			<div class="col-md-6 col-xl-6">
 																				<div class="form-group has-feedback"> 
-																					<label for="Institusi">Institusi</label>
-																					<input type="text" class="form-control" id="Institusi" name="Institusi" placeholder="Masukkan Institusi" data-minlength="3" 
+																					<label for="Institusi">Institusi / Instansi</label>
+																					<input type="text" class="form-control" id="Institusi" name="Institusi" placeholder="Masukkan Institusi / Instansi " data-minlength="3" 
 																					data-required-error="Wajib diisi" data-minlength-error="Minimal 3 Huruf" oninput="this.value = this.value.toUpperCase()"
 																					required>
 																					<span class="glyphicon form-control-feedback" aria-hidden="true"></span>

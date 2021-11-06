@@ -188,7 +188,7 @@
     
     <!--====== ABOUT PART START ======-->
     
-								<section id="buku_tamu_pst" class="about-area pt-70">
+								<section id="buku_tamu_pst" class="about-area pt-70 wow fadeInUp" data-wow-duration="1.3s" data-wow-delay="0.5s">
 									<div class="container">
 										<div class="row">
 											
@@ -279,26 +279,16 @@
 																			</div>
 																			
 																			
-																			<div class='col-md-6 col-xl-6'>
-																				<div class="form-group has-feedback">
-																				<label for="Pekerjaan">Pekerjaan</label>
-																				<select class="form-control" id="Pekerjaan" name="Pekerjaan" data-required-error="Wajib diisi" 
-																				required>
-																				<!-- Tinggal Ganti Nama Dinas -->
-																				 <option disabled selected>-- Pilih Pekerjaan --</option>
-																				 <option>Wiraswasta</option>
-																				 <option>Karyawan Swasta</option>
-																				 <option>Karyawan BUMN</option>
-																				 <option>Pegawai Negeri Sipil</option>
-																				 <option>Polisi/Tentara</option>
-																				 <option>Guru/Dosen</option>
-																				 <option>Mahasiswa</option>
-																				 <option>Belum Bekerja</option>
-																				</select>
-																				<div class="help-block with-errors"></div>
+																			<div class="col-md-6 col-xl-6">
+																				<div class="form-group has-feedback"> 
+																					<label for="Institusi">Dari / Institusi / Instansi</label>
+																					<input type="text" class="form-control" id="Institusi" name="Institusi" placeholder="Masukkan Institusi / Instansi anda" data-minlength="3" 
+																					data-required-error="Wajib diisi" data-minlength-error="Minimal 3 Huruf" oninput="this.value = this.value.toUpperCase()"
+																					required>
+																					<span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+																					<div class="help-block with-errors"></div>
 																				</div>
-																			</div>
-																			
+																			</div>	
 																			
 																			<!-- <div class="col-md-12 col-xl-12">
 																				<div class="form-group has-feedback"> 
