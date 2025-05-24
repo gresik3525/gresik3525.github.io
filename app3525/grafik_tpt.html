@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grafik Scroll Horizontal</title>
+  <title>Grafik Responsif & Scrollable</title>
   <style>
     body {
       margin: 0;
@@ -18,7 +18,9 @@
     }
 
     .scroll-x iframe {
-      min-width: 800px; /* Lebar asli grafik, bisa diubah sesuai kebutuhan */
+      width: 100%;
+      min-width: 400px;  /* Grafik akan mengecil di HP, dan bisa discroll kalau lebih besar */
+      max-width: 1000px; /* Batasi maksimal lebarnya agar tidak terlalu besar */
       height: 500px;
       border: none;
       display: block;
