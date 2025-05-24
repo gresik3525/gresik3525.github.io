@@ -1,30 +1,32 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chart Responsif</title>
   <style>
     body {
       margin: 0;
       padding: 0;
+      font-family: sans-serif;
+      background-color: #f9f9f9;
     }
 
     .chart-container {
-      width: 100%;
-      max-width: 100%;
-      height: 0;
-      padding-bottom: 125%; /* Rasio tinggi (bisa disesuaikan) */
       position: relative;
+      width: 100%;
+      padding-bottom: 100%; /* Sesuaikan rasio aspek grafik */
+      height: 0;
+      overflow: hidden;
     }
 
     .chart-container iframe {
       position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
-      left: 0;
-      top: 0;
     }
   </style>
 </head>
@@ -32,7 +34,7 @@
 
 <div class="chart-container">
   <iframe 
-    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQnDmj_aiVJB2RZOYjUFA_o1dF_dJVGjvOBDhmyxBUiYEtxtCtel0RZm7mS4lLj1gv8Z6SK8PR4vfEU/pubchart?oid=22957002&amp;format=interactive" 
+    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQnDmj_aiVJB2RZOYjUFA_o1dF_dJVGjvOBDhmyxBUiYEtxtCtel0RZm7mS4lLj1gv8Z6SK8PR4vfEU/pubchart?oid=22957002&amp;format=interactive"
     allowfullscreen>
   </iframe>
 </div>
