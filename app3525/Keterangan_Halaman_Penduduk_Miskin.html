@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Google Sheets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+      text-align: justify;
+      line-height: 1.5;
+      font-size: 12px;
+    }
+    #output {
+      white-space: pre-wrap; /* supaya baris baru muncul sesuai isi sheet */
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="output">Memuat data...</div>
+
+  <script>
+    fetch("https://script.google.com/macros/s/AKfycbz5uETmA5C8lzzRR0eSJY4ncs6ER7OCpXvI_18rKKy0NZNjI7SMuMuwHoyKaXYA8aj6qg/exec") // Ganti dengan URL Web App kamu
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("output").innerText = data.text;
+      })
+      .catch(() => {
+        document.getElementById("output").innerText = "Gagal memuat data.";
+      });
+  </script>
+</body>
+</html>
