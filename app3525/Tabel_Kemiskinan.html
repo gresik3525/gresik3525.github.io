@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Data Google Sheet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h2>Data dari Google Sheet</h2>
+  <table id="sheetTable" class="display" style="width:100%">
+    <thead><tr><th>Memuat...</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- jQuery & DataTables JS -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <script>
+    fetch("https://script.google.com/macros/s/AKfycbwFeRrnXqccisr-46TewMk0ukx8xwDcNIUyi0A0JmRrCjwoNJP0aRApIlvvcx83aIL1/exec") // Ganti dengan Web App URL
+      .then(res => res.json())
+      .then(data => {
+        const [headers, ...rows] = data;
+
+        // Set header
+        const thead = document.querySelector("#sheetTable thead tr");
+        thead.innerHTML = "";
+        headers.forEach(header => {
+          thead.innerHTML += `<th>${header}</th>`;
+        });
+
+        // Set body
+        const tbody = document.querySelector("#sheetTable tbody");
+        tbody.innerHTML = "";
+        rows.forEach(row => {
+          let tr = "<tr>";
+          row.forEach(cell => {
+            tr += `<td>${cell}</td>`;
+          });
+          tr += "</tr>";
+          tbody.innerHTML += tr;
+        });
+
+        // Aktifkan DataTables
+        new DataTable("#sheetTable");
+      })
+      .catch(error => {
+        console.error("Gagal mengambil data:", error);
+        document.querySelector("#sheetTable").outerHTML = "<p>Gagal memuat data dari Google Sheet.</p>";
+      });
+  </script>
+</body>
+</html>
