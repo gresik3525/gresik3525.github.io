@@ -2,23 +2,39 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <title>Data Google Sheet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Google Sheet</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
 
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Roboto', sans-serif;
+      font-size: 12px;
+      background: #f8f9fa;
+      color: #333;
       max-width: 800px;
       margin: auto;
-      padding: 1em;
+      padding: 2em 1em;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1em;
+    }
+
+    table.dataTable {
+      font-size: 14px;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <table id="sheetTable" class="display" style="width:100%">
+  <table id="sheetTable" class="display">
     <thead><tr><th>Memuat...</th></tr></thead>
     <tbody></tbody>
   </table>
@@ -28,7 +44,7 @@
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
   <script>
-    fetch("https://script.google.com/macros/s/AKfycby0ZGTN8h_Cy9v0VwjsH9fuecKnlIT353mouOHWufvMkNh0R8d4Ad47amftiaNFKEU3/exec") // Ganti dengan Web App URL
+    fetch("https://script.google.com/macros/s/AKfycby0ZGTN8h_Cy9v0VwjsH9fuecKnlIT353mouOHWufvMkNh0R8d4Ad47amftiaNFKEU3/exec") // GANTI DENGAN URL WEB APP
       .then(res => res.json())
       .then(data => {
         const [headers, ...rows] = data;
@@ -52,12 +68,15 @@
           tbody.innerHTML += tr;
         });
 
-        // Aktifkan DataTables
-        new DataTable("#sheetTable");
+        // Aktifkan DataTables dengan sort kolom pertama (tahun) desc
+        new DataTable("#sheetTable", {
+          order: [[0, "desc"]] // sort berdasarkan kolom ke-0 descending
+        });
       })
       .catch(error => {
-        console.error("Gagal mengambil data:", error);
-        document.querySelector("#sheetTable").outerHTML = "<p>Gagal memuat data dari Google Sheet.</p>";
+        document.querySelector("#sheetTable").outerHTML =
+          "<p style='color: red;'>Gagal memuat data dari Google Sheet.</p>";
+        console.error("Error:", error);
       });
   </script>
 </body>
