@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grafik Responsif & Scrollable</title>
+  <title>Grafik Google Sheets Penuh</title>
   <style>
     body {
       margin: 0;
@@ -12,24 +12,31 @@
       background-color: #f9f9f9;
     }
 
-    .scroll-x {
+    .iframe-wrapper {
       overflow-x: auto;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      width: 100%;
     }
 
-    .scroll-x iframe {
-      width: 100%;
-      min-width: 400px;  /* Grafik akan mengecil di HP, dan bisa discroll kalau lebih besar */
-      max-width: 1000px; /* Batasi maksimal lebarnya agar tidak terlalu besar */
-      height: 500px;
+    iframe {
+      min-width: 1000px; /* Lebar minimal grafik */
+      height: 800px;      /* Tinggi cukup besar agar grafik tidak terpotong */
       border: none;
       display: block;
+    }
+
+    @media (max-width: 600px) {
+      iframe {
+        min-width: 800px; /* Jika di HP, tetap bisa diskroll horizontal */
+        height: 900px;    /* Tambah tinggi jika grafik vertikal panjang */
+      }
     }
   </style>
 </head>
 <body>
 
-<div class="scroll-x">
+<div class="iframe-wrapper">
   <iframe 
     src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQnDmj_aiVJB2RZOYjUFA_o1dF_dJVGjvOBDhmyxBUiYEtxtCtel0RZm7mS4lLj1gv8Z6SK8PR4vfEU/pubchart?oid=89485638&amp;format=interactive" 
     allowfullscreen>
