@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml">
+	<head>
+		<title>Desa Leran</title>
+		<base target="_top"></base>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<meta name="geo.position" content="-7.1226618; 112.5812087" />
+		<meta name="ICBM" content="-7.1226618, 112.5812087" />
+	</head>
+	<body style="margin:0px;">
+		
+		<script type="text/javascript">
+			API = 'leaflet'; // can be either 'leaflet' or 'google'
+			if (self.API && API.match(/^g/i)) {
+				google_api_key = ''; // Your project's Google Maps API key goes here (https://code.google.com/apis/console)
+				language_code = '';
+				document.writeln('<script src="https://maps.googleapis.com/maps/api/js?v=3&amp;libraries=geometry&amp;language='+(self.language_code?self.language_code:'')+'&amp;key='+(self.google_api_key?self.google_api_key:'')+'" type="text/javascript"><'+'/script>');
+			} else {
+				document.writeln('<link href="https://maps.gpsvisualizer.com/leaflet/leaflet.css" rel="stylesheet" />');
+				document.writeln('<script src="https://maps.gpsvisualizer.com/leaflet/leaflet.js" type="text/javascript"><'+'/script>');
+			}
+			thunderforest_api_key = ''; // To display OpenStreetMap tiles from ThunderForest, you need a key (https://www.thunderforest.com/docs/apikeys/)
+			tracestrack_api_key = ''; // To display topo tiles from Tracestrack, you need a key (https://console.tracestrack.com/explorer)
+			ign_api_key = ''; // To display topo tiles from IGN.fr, you need a key (https://api.ign.fr/)
+		</script>
+
+		
+		<!--
+			If you want to transplant this map into another Web page, by far the best method is to
+			simply include it in a IFRAME tag (see https://www.gpsvisualizer.com/faq.html#google_html).
+			But, if you must paste the code into another page, be sure to include all of these parts:
+			   1. The "div" tags that contain the map and its widgets, below
+			   2. Three sections of JavaScript code:
+			      a. The API code (from googleapis.com or /leaflet), above
+			      b. "gv_options" and the code that calls a .js file on gpsvisualizer.com
+			      c. The "GV_Map" function, which contains all the geographic info for the map
+		-->
+		<div style="margin-left:0px; margin-right:0px; margin-top:0px; margin-bottom:0px;">
+			<div id="gmap_div" style="width:100%; height:100%; margin:0px; margin-right:12px; background-color:#f0f0f0; float:left; overflow:hidden;">
+				<p style="text-align:center; font:10px Arial;">This map was created using <a target="_blank" href="https://www.gpsvisualizer.com/">GPS Visualizer</a>'s do-it-yourself geographic utilities.<br /><br />Please wait while the map data loads...</p>
+			</div>
+				
+			<div id="gv_infobox" class="gv_infobox" style="font:11px Arial; border:solid #666666 1px; background-color:#ffffff; padding:4px; overflow:auto; display:none; max-width:400px;">
+				<!-- Although GPS Visualizer didn't create an legend/info box with your map, you can use this space for something else if you'd like; enable it by setting gv_options.infobox_options.enabled to true -->
+			</div>
+
+
+			<div id="gv_tracklist" class="gv_tracklist" style="font:11px Arial; line-height:11px; background-color:#ffffff; overflow:auto; display:none;"><!-- --></div>
+
+			<div id="gv_marker_list" class="gv_marker_list" style="background-color:#ffffff; overflow:auto; display:none;"><!-- --></div>
+
+			<div id="gv_clear_margins" style="height:0px; clear:both;"><!-- clear the "float" --></div>
+		</div>
+
+		
+		<!-- begin GPS Visualizer setup script (must come after loading of API code) -->
+		<script type="text/javascript">
+			/* Global variables used by the GPS Visualizer functions (20250604014936): */
+			gv_options = {};
+			
+			// basic map parameters:
+			gv_options.center = [-7.12266178499999,112.581208741];  // [latitude,longitude] - be sure to keep the square brackets
+			gv_options.zoom = 14;  // higher number means closer view; can also be 'auto' for automatic zoom/center based on map elements
+			gv_options.map_type = 'ARCGIS_HYBRID';  // popular map_type choices are 'GV_STREET', 'GV_SATELLITE', 'GV_HYBRID', 'GV_TERRAIN', 'GV_OSM', 'GV_TOPO_US', 'GV_TOPO_WORLD' (https://www.gpsvisualizer.com/misc/leaflet_map_types.html)
+			gv_options.map_opacity = 1.00;  // number from 0 to 1
+			gv_options.full_screen = true;  // true|false: should the map fill the entire page (or frame)?
+			gv_options.width = 700;  // width of the map, in pixels
+			gv_options.height = 673;  // height of the map, in pixels
+			
+			gv_options.map_div = 'gmap_div';  // the name of the HTML "div" tag containing the map itself; usually 'gmap_div'
+			gv_options.doubleclick_zoom = true;  // true|false: zoom in when mouse is double-clicked?
+			gv_options.doubleclick_center = true;  // true|false: re-center the map on the point that was double-clicked?
+			gv_options.scroll_zoom = true; // true|false; or 'reverse' for down=in and up=out
+			gv_options.page_scrolling = true; // true|false; does the map relenquish control of the scroll wheel when embedded in scrollable pages?
+			gv_options.autozoom_adjustment = 0; gv_options.autozoom_default = 11;
+			gv_options.centering_options = { 'open_info_window':true, 'partial_match':true, 'center_key':'center', 'default_zoom':null } // URL-based centering (e.g., ?center=name_of_marker&zoom=14)
+			gv_options.street_view = false; // true|false: allow Google Street View on the map (Google Maps only)
+			gv_options.tilt = false; // true|false: allow Google Maps to show 45-degree tilted aerial imagery?
+			gv_options.disable_google_pois = false;  // true|false: if you disable clickable POIs on Google Maps, you also lose the labels on parks, airports, etc.
+			gv_options.animated_zoom = true; // true|false: only affects Leaflet maps
+			
+			// widgets on the map:
+			gv_options.zoom_control = 'auto'; // 'auto'|'large'|'small'|'none'
+			gv_options.recenter_button = true; // true|false: is there a 'click to recenter' button above the zoom control?
+			gv_options.geolocation_control = false; // true|false; only works on secure servers
+			gv_options.geolocation_options = { center:true, zoom:null, marker:true, info_window:true };
+			gv_options.scale_control = true; // true|false
+			gv_options.map_opacity_control = false;  // true|false
+			gv_options.map_type_control = {};  // widget to change the background map
+			  gv_options.map_type_control.visible = 'auto'; // true|false|'auto': is a map type control placed on the map itself?
+			  gv_options.map_type_control.filter = false;  // true|false: when map loads, are irrelevant maps ignored?
+			  gv_options.map_type_control.excluded = [];  // comma-separated list of quoted map IDs that will never show in the list ('included' also works)
+			gv_options.center_Koordinat = true;  // true|false: show a "center Koordinat" box and crosshair?
+			gv_options.measurement_tools = true; // true|false: put a measurement ruler on the map?
+			gv_options.measurement_options = { visible:false, distance_color:'', area_color:'' };
+			gv_options.crosshair_hidden = true;  // true|false: hide the crosshair initially?
+			gv_options.crosshair_permanent = false; // if true, overrides crosshair_hidden
+			gv_options.mouse_Koordinat = false;  // true|false: show a "mouse Koordinat" box?
+			gv_options.utilities_menu = { 'maptype':true, 'opacity':true, 'measure':true, 'geolocate':true, 'profile':true };
+			gv_options.allow_export = false;  // true|false
+			
+			gv_options.infobox_options = {}; // options for a floating info box (id="gv_infobox"), which can contain anything
+			  gv_options.infobox_options.enabled = true;  // true|false: enable or disable the info box altogether
+			  gv_options.infobox_options.position = ['LEFT_TOP',52,4];  // [Google anchor name, relative x, relative y]
+			  gv_options.infobox_options.draggable = true;  // true|false: can it be moved around the screen?
+			  gv_options.infobox_options.collapsible = true;  // true|false: can it be collapsed by double-clicking its top bar?
+			
+			// track-related options:
+			gv_options.track_optimization = 1; // sets Leaflet's smoothFactor parameter
+			gv_options.track_tooltips = false; // true|false: should the name of a track appear on the map when you mouse over the track itself?
+			gv_options.tracklist_options = {}; // options for a floating list of the tracks visible on the map
+			  gv_options.tracklist_options.enabled = true;  // true|false: enable or disable the tracklist altogether
+			  gv_options.tracklist_options.position = ['RIGHT_TOP',4,32];  // [Google anchor name, relative x, relative y]
+			  gv_options.tracklist_options.min_width = 100; // minimum width of the tracklist, in pixels
+			  gv_options.tracklist_options.max_width = 180; // maximum width of the tracklist, in pixels
+			  gv_options.tracklist_options.min_height = 0; // minimum height of the tracklist, in pixels; if the list is longer, scrollbars will appear
+			  gv_options.tracklist_options.max_height = 296; // maximum height of the tracklist, in pixels; if the list is longer, scrollbars will appear
+			  gv_options.tracklist_options.desc = true;  // true|false: should tracks' descriptions be shown in the list
+			  gv_options.tracklist_options.toggle = false;  // true|false: should clicking on a track's name turn it on or off?
+			  gv_options.tracklist_options.checkboxes = true;  // true|false: should there be a separate icon/checkbox for toggling visibility?
+			  gv_options.tracklist_options.zoom_links = true;  // true|false: should each item include a small icon that will zoom to that track?
+			  gv_options.tracklist_options.highlighting = true;  // true|false: should the track be highlighted when you mouse over the name in the list?
+			  gv_options.tracklist_options.tooltips = false;  // true|false: should the name of the track appear on the map when you mouse over the name in the list?
+			  gv_options.tracklist_options.draggable = true;  // true|false: can it be moved around the screen?
+			  gv_options.tracklist_options.collapsible = true;  // true|false: can it be collapsed by double-clicking its top bar?
+			  gv_options.tracklist_options.header = 'Tracks:'; // HTML code; be sure to put backslashes in front of any single quotes, and don't include any line breaks
+			  gv_options.tracklist_options.footer = ''; // HTML code
+			gv_options.profile_options = { visible:false, icon:true, units:'metric', filled:true, waypoints:true, height:120, width:'100%', y_min:null, y_max:null, gap_between_tracks:false }; // see https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
+
+
+			// marker-related options:
+			gv_options.default_marker = { color:'orange',icon:'google',scale:1 }; // icon can be a URL, but be sure to also include size:[w,h] and optionally anchor:[x,y]
+			gv_options.vector_markers = true; // are the icons on the map in embedded SVG format?
+			gv_options.marker_tooltips = true; // do the names of the markers show up when you mouse-over them?
+			gv_options.marker_shadows = true; // true|false: do the standard markers have "shadows" behind them?
+			gv_options.marker_link_target = '_blank'; // the name of the window or frame into which markers' URLs will load
+			gv_options.info_window_width = 0;  // in pixels, the width of the markers' pop-up info "bubbles" (can be overridden by 'window_width' in individual markers)
+			gv_options.thumbnail_width = 0;  // in pixels, the width of the markers' thumbnails (can be overridden by 'thumbnail_width' in individual markers)
+			gv_options.photo_size = [0,0];  // in pixels, the size of the photos in info windows (can be overridden by 'photo_width' or 'photo_size' in individual markers)
+			gv_options.hide_labels = false;  // true|false: hide labels when map first loads?
+			gv_options.labels_behind_markers = false; // true|false: are the labels behind other markers (true) or in front of them (false)?
+			gv_options.label_offset = [0,0];  // [x,y]: shift all markers' labels (positive numbers are right and down)
+			gv_options.label_centered = false;  // true|false: center labels with respect to their markers?  (label_left is also a valid option.)
+			gv_options.driving_directions = false;  // put a small "driving directions" form in each marker's pop-up window? (override with dd:true or dd:false in a marker's options)
+			gv_options.garmin_icon_set = '24x24'; // 'gpsmap' are the small 16x16 icons; change it to '24x24' for larger icons
+			gv_options.marker_list_options = {};  // options for a dynamically-created list of markers
+			  gv_options.marker_list_options.enabled = true;  // true|false: enable or disable the marker list altogether
+			  gv_options.marker_list_options.floating = true;  // is the list a floating box inside the map itself?
+			  gv_options.marker_list_options.position = ['RIGHT_BOTTOM',6,38];  // floating list only: position within map
+			  gv_options.marker_list_options.min_width = 160; // minimum width, in pixels, of the floating list
+			  gv_options.marker_list_options.max_width = 160;  // maximum width
+			  gv_options.marker_list_options.min_height = 0;  // minimum height, in pixels, of the floating list
+			  gv_options.marker_list_options.max_height = 296;  // maximum height
+			  gv_options.marker_list_options.draggable = true;  // true|false, floating list only: can it be moved around the screen?
+			  gv_options.marker_list_options.collapsible = true;  // true|false, floating list only: can it be collapsed by double-clicking its top bar?
+			  gv_options.marker_list_options.include_tickmarks = false;  // true|false: are distance/time tickmarks included in the list?
+			  gv_options.marker_list_options.include_trackpoints = false;  // true|false: are "trackpoint" markers included in the list?
+			  gv_options.marker_list_options.dividers = false;  // true|false: will a thin line be drawn between each item in the list?
+			  gv_options.marker_list_options.desc = true;  // true|false: will the markers' descriptions be shown below their names in the list?
+			  gv_options.marker_list_options.icons = true;  // true|false: should the markers' icons appear to the left of their names in the list?
+			  gv_options.marker_list_options.icon_scale = 'x1'; // size of the icons in the list; you can also supply a size in pixels (e.g. '16px')
+			  gv_options.marker_list_options.thumbnails = false;  // true|false: should markers' thumbnails be shown in the list?
+			  gv_options.marker_list_options.folders_collapsed = false;  // true|false: do folders in the list start out in a collapsed state?
+			  gv_options.marker_list_options.folders_hidden = false;  // true|false: do folders in the list start out in a hidden state?
+			  gv_options.marker_list_options.collapsed_folders = []; // an array of folder names
+			  gv_options.marker_list_options.hidden_folders = []; // an array of folder names
+			  gv_options.marker_list_options.count_folder_items = false;  // true|false: list the number of items in each folder?
+			  gv_options.marker_list_options.folder_zoom = true;  // true|false: is there a zoom link next to each folder name?
+			  gv_options.marker_list_options.folders_first = true;  // true|false: do folders in the list come before un-foldered markers?
+			  gv_options.marker_list_options.wrap_names = true;  // true|false: should marker's names be allowed to wrap onto more than one line?
+			  gv_options.marker_list_options.unnamed = '[unnamed]';  // what 'name' should be assigned to  unnamed markers in the list?
+			  gv_options.marker_list_options.colors = false;  // true|false: should the names/descs of the points in the list be colorized the same as their markers?
+			  gv_options.marker_list_options.default_color = '';  // default HTML color code for the names/descs in the list
+			  gv_options.marker_list_options.limit = 0;  // how many markers to show in the list; 0 for no limit
+			  gv_options.marker_list_options.center = false;  // true|false: does the map center upon a marker when you click its name in the list?
+			  gv_options.marker_list_options.zoom = false;  // true|false: does the map zoom to a certain level when you click on a marker's name in the list?
+			  gv_options.marker_list_options.zoom_level = 16;  // if 'zoom' is true, what level should the map zoom to?
+			  gv_options.marker_list_options.info_window = true;  // true|false: do info windows pop up when the markers' names are clicked in the list?
+			  gv_options.marker_list_options.url_links = false;  // true|false: do the names in the list become instant links to the markers' URLs?
+			  gv_options.marker_list_options.toggle = false;  // true|false: does a marker disappear if you click on its name in the list?
+			  gv_options.marker_list_options.help_tooltips = false;  // true|false: do "tooltips" appear on marker names that tell you what happens when you click?
+			  gv_options.marker_list_options.id = 'gv_marker_list';  // id of a DIV tag that holds the list
+			  gv_options.marker_list_options.header = ''; // HTML code; be sure to put backslashes in front of any single quotes, and don't include any line breaks
+			  gv_options.marker_list_options.footer = ''; // HTML code
+			gv_options.marker_filter_options = {};  // options for removing waypoints that are out of the current view
+			  gv_options.marker_filter_options.enabled = false;  // true|false: should out-of-range markers be removed?
+			  gv_options.marker_filter_options.movement_threshold = 8;  // in pixels, how far the map has to move to trigger filtering
+			  gv_options.marker_filter_options.limit = 0;  // maximum number of markers to display on the map; 0 for no limit
+			  gv_options.marker_filter_options.update_list = true;  // true|false: should the marker list be updated with only the filtered markers?
+			  gv_options.marker_filter_options.sort_list_by_distance = false;  // true|false: should the marker list be sorted by distance from the center of the map?
+			  gv_options.marker_filter_options.min_zoom = 0;  // below this zoom level, don't show any markers at all
+			  gv_options.marker_filter_options.zoom_message = '';  // message to put in the marker list if the map is below the min_zoom threshold
+			gv_options.synthesize_fields = {}; // for example: {label:'{name}'} would cause all markers' names to become visible labels
+				
+
+			
+			// Load GPS Visualizer's mapping functions (this must be loaded AFTER gv_options are set):
+			var script_file = (self.API && API.match(/^g/i)) ? 'google_maps/functions3.js' : 'leaflet/functions.js';
+			document.writeln('<script src="https://maps.gpsvisualizer.com/'+script_file+'" type="text/javascript"><'+'/script>');
+		</script>
+		<style type="text/css">
+			/* Put any custom style definitions here (e.g., .gv_marker_info_window, .gv_marker_info_window_name, .gv_marker_list_item, .gv_tooltip, .gv_label, etc.) */
+			#gmap_div .gv_marker_info_window {
+				font-size:11px !important;
+			}
+			#gmap_div .gv_label {
+				opacity:0.90; filter:alpha(opacity=90);
+				color:white; background:#333333; border:1px solid black; padding:1px;
+				font-family:Verdana !important; font-size:10px;
+				font-weight:normal !important;
+			}
+			.gv_tooltip {
+				font:10px Verdana,sans-serif; color:black; background-color:white; border:1px solid #666666; padding:0px; opacity:1 !important;
+			}
+			.legend_block {
+				display:inline-block; border:solid 1px black; width:9px; height:9px; margin:0px 2px 0px 0px;
+			}
+			
+		</style>
+		
+		<!-- end GPSV setup script and styles; begin map-drawing script (they must be separate) -->
+		<script type="text/javascript">
+			function GV_Map() {
+				GV_Setup_Map();
+				
+				// Track #1
+				t = 1; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'Pertanian (Tambak)'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.10687,112.58385],[-7.1071,112.58478],[-7.10783,112.58579],[-7.10791722699997,112.585918545],[-7.10802,112.58607],[-7.10819,112.58619],[-7.10834,112.58625],[-7.1085,112.58631],[-7.10862460899995,112.586353342],[-7.10873,112.58639],[-7.10874307199998,112.586568651],[-7.10876,112.5868],[-7.10891,112.58671],[-7.10895934399997,112.586759344],[-7.10903,112.58683],[-7.10941,112.58724],[-7.10981,112.58728],[-7.10997401899994,112.587312804],[-7.11006,112.58733],[-7.11051,112.5876],[-7.11052600599993,112.587606288],[-7.11079,112.58771],[-7.11107518199998,112.588224912],[-7.11115,112.58836],[-7.11138472399995,112.588707739],[-7.11142,112.58876],[-7.11162,112.58909],[-7.11175,112.58933],[-7.11211,112.58979],[-7.11236,112.5901],[-7.11252437699994,112.590061068],[-7.11274,112.59001],[-7.11365,112.58868],[-7.11428,112.58785],[-7.11428898299994,112.587846678],[-7.11450632999993,112.58776629],[-7.11481486899993,112.587652172],[-7.11501,112.58758],[-7.11541973499993,112.587473533],[-7.11628,112.58725],[-7.11637682499997,112.587270539],[-7.11661,112.58732],[-7.11708,112.58732],[-7.11735,112.58759],[-7.11755,112.58779],[-7.11754935199997,112.587837949],[-7.11754,112.58853],[-7.11741,112.58906],[-7.11724803399994,112.589461915],[-7.11714,112.58973],[-7.11677649999996,112.59006632],[-7.11607,112.59072],[-7.1148,112.59166],[-7.11479293999997,112.59168172],[-7.11467,112.59206],[-7.11492476799998,112.592339198],[-7.11504186999997,112.59246753],[-7.11535996399994,112.592596184],[-7.11548908999993,112.59264841],[-7.11556267899994,112.592652756],[-7.11603155999995,112.59268045],[-7.11632183199993,112.59263996],[-7.11666486999997,112.59259211],[-7.11690523399994,112.592627327],[-7.11708666999994,112.59265391],[-7.11705684499998,112.593233271],[-7.11704016999994,112.5935572],[-7.11700950699998,112.594152904],[-7.11889754899994,112.593782465],[-7.11886295899996,112.593601531],[-7.11895713399997,112.593542214],[-7.11902233999996,112.593501144],[-7.11921537299998,112.593449001],[-7.11923,112.59344],[-7.11928739999996,112.593419127],[-7.11934,112.5934],[-7.11946,112.59334],[-7.11951009999996,112.5933233],[-7.11955,112.59331],[-7.11965,112.59327],[-7.11969240599996,112.593246441],[-7.11974,112.59322],[-7.11977920199996,112.593180798],[-7.11981,112.59315],[-7.11983106599996,112.593116295],[-7.11984249999995,112.593098],[-7.11984557499994,112.593093081],[-7.11983699199993,112.593071851],[-7.11983381699997,112.593063997],[-7.11981675599998,112.593021795],[-7.11966669399993,112.592497223],[-7.11965737499997,112.592464645],[-7.11940855199992,112.592490948],[-7.11894513999994,112.592539936],[-7.11874016599995,112.59208254],[-7.11863138799993,112.592142654],[-7.1186,112.59216],[-7.11856421299996,112.592182455],[-7.11852145999995,112.59220928],[-7.11839681199996,112.592287491],[-7.11826776799995,112.591656528],[-7.11827676199994,112.591535682],[-7.11828270999996,112.591455753],[-7.11832255599995,112.591350347],[-7.11837396299995,112.591288179],[-7.11839726599993,112.591259998],[-7.11930688599995,112.590946133],[-7.11928382499997,112.590873507],[-7.11933679699996,112.590849188],[-7.11973208499995,112.590667713],[-7.11976115599998,112.590556385],[-7.11978189199993,112.590476977],[-7.11980941499996,112.590471694],[-7.11988648599993,112.5904569],[-7.11988098499995,112.590265652],[-7.11987652399995,112.590110564],[-7.12014287899996,112.590085],[-7.12019030599993,112.590080448],[-7.12019843599995,112.590085791],[-7.12030486099997,112.590155738],[-7.12030518599994,112.590157294],[-7.12030542199994,112.590158426],[-7.12064852599997,112.590017706],[-7.12065408799998,112.590046334],[-7.12086269399992,112.589972531],[-7.12107254699993,112.590001329],[-7.12144791899993,112.590052841],[-7.12145349199994,112.59008846],[-7.12180312199996,112.590104476],[-7.12178162199996,112.589370208],[-7.12201571199995,112.589309975],[-7.12194939199998,112.589120607],[-7.12194100299996,112.589096652],[-7.12193322199994,112.589064165],[-7.12188870599994,112.58887831],[-7.12185957099996,112.588691776],[-7.12184637099995,112.588607265],[-7.12184718099996,112.588607204],[-7.12227719599997,112.588574639],[-7.12233087899995,112.588667383],[-7.12236435699998,112.58872522],[-7.12259097499998,112.588672516],[-7.12265074299995,112.589320014],[-7.12279518099996,112.589309975],[-7.12279584999993,112.589313855],[-7.12286495799998,112.589306446],[-7.12296078699995,112.589296172],[-7.12297584299995,112.589362286],[-7.12297821899995,112.589372717],[-7.12322079799998,112.589326495],[-7.12327456599996,112.58931625],[-7.12330913799997,112.589279007],[-7.12338289499996,112.589199549],[-7.12360343199992,112.589184545],[-7.12367799699996,112.589179472],[-7.12369667399997,112.589254762],[-7.12378003399994,112.589255868],[-7.12379130599993,112.589256017],[-7.12379303299997,112.589255908],[-7.12381122799996,112.589254762],[-7.12382595399993,112.589326138],[-7.12383737599993,112.589381501],[-7.12388056499998,112.589377117],[-7.12392391499998,112.589372717],[-7.12393488599997,112.589408097],[-7.12394259199993,112.58943295],[-7.12407706799996,112.589419147],[-7.12413309999994,112.589906025],[-7.12412626299994,112.589906965],[-7.12412148099997,112.589907623],[-7.12413605199993,112.589957549],[-7.12416422899997,112.590054096],[-7.12423930199998,112.590042509],[-7.12471707699996,112.589968767],[-7.12472138699996,112.589996567],[-7.12476688299995,112.590290006],[-7.12499100999997,112.590300045],[-7.12499122499997,112.59030405],[-7.12499136499997,112.590306655],[-7.12558121099994,112.59033769],[-7.12557892899997,112.590147903],[-7.12557623099997,112.589923593],[-7.12539520299992,112.58993714],[-7.12507318999997,112.589961238],[-7.12496736199995,112.589641283],[-7.12495116499997,112.589592315],[-7.12491790299992,112.589584696],[-7.12478680499993,112.589554669],[-7.12459754199995,112.589479379],[-7.12475941199995,112.588676281],[-7.12514540899997,112.588734003],[-7.12518461199994,112.588551277],[-7.12518525399997,112.588548287],[-7.12531206299997,112.588573846],[-7.12533467199995,112.588578403],[-7.12533600399996,112.588569231],[-7.12534961299997,112.588475506],[-7.12537576199998,112.58836759],[-7.12540315499996,112.588336219],[-7.12539882699997,112.58822717],[-7.12539568399995,112.588147993],[-7.12580658299993,112.588022509],[-7.12587273799994,112.588084544],[-7.12592300499995,112.58813168],[-7.12594915299997,112.588165561],[-7.12592626999998,112.588320068],[-7.12590557299996,112.588459821],[-7.12592113699998,112.588550797],[-7.12595374699993,112.588651823],[-7.12600518399995,112.588811176],[-7.12600546999994,112.588826741],[-7.12600767499993,112.588946699],[-7.12603390999993,112.588990766],[-7.12603755799995,112.588996893],[-7.12603870499993,112.588998498],[-7.12608238399997,112.589059635],[-7.12610317199994,112.589143434],[-7.12612720899995,112.589240332],[-7.12612869199995,112.589307585],[-7.12612969899993,112.589353267],[-7.12612204799996,112.589354145],[-7.12582339299996,112.589388403],[-7.12585355699997,112.589667781],[-7.12587568899994,112.589872772],[-7.12575457999998,112.589895082],[-7.12564409099997,112.589915436],[-7.12565156199997,112.590379727],[-7.12584829599996,112.590389766],[-7.12597031999996,112.591192864],[-7.12504995299997,112.591398982],[-7.12505077699996,112.591414344],[-7.12474197999995,112.591469557],[-7.12462244499994,112.591529789],[-7.12568331399996,112.59451631],[-7.12569997299994,112.594539285],[-7.12587257599995,112.594777317],[-7.12599712399998,112.594803064],[-7.12606681899996,112.594817472],[-7.12609578099995,112.594884827],[-7.12619631499996,112.595118634],[-7.12631244299996,112.595142641],[-7.12639055799997,112.595158789],[-7.12648487199993,112.595256274],[-7.12652168199998,112.595294322],[-7.12652510599997,112.59529038],[-7.12652586999997,112.5952895],[-7.12654298999996,112.5952698],[-7.12656773599997,112.595241314],[-7.12680173999996,112.59497194],[-7.12696802999994,112.594874778],[-7.12708296999995,112.59480762],[-7.12735220999997,112.594705326],[-7.12763263999994,112.59459878],[-7.12811229999994,112.59434425],[-7.12878176999993,112.5941069],[-7.12869700699997,112.593650057],[-7.12863208999994,112.59330018],[-7.12845537999993,112.59335072],[-7.12831095099995,112.593351655],[-7.12816357999998,112.59335261],[-7.12814811099997,112.593253002],[-7.12814143999998,112.59321005],[-7.12812328499996,112.593093137],[-7.12807,112.59275],[-7.12793763399998,112.591863725],[-7.12784,112.59121],[-7.12768,112.59119],[-7.12748167899997,112.591165211],[-7.12748148899993,112.591164219],[-7.12748117599995,112.59116259],[-7.12724769899995,112.591142565],[-7.12694900599996,112.591116946],[-7.12677966599995,112.591114437],[-7.12676482099994,112.590902001],[-7.12674231199998,112.590579874],[-7.12670744699994,112.590569836],[-7.12670744699994,112.590429294],[-7.12684939399998,112.590416745],[-7.12682550399995,112.59024323],[-7.12681328499997,112.590154483],[-7.12686356299997,112.590144165],[-7.12713579299998,112.590088298],[-7.12713129299993,112.590078571],[-7.12729476399994,112.590053676],[-7.12753259699997,112.590017457],[-7.12797131199994,112.589900566],[-7.12847683299998,112.589765876],[-7.12910479199996,112.589598564],[-7.12920415499997,112.58957209],[-7.12920419899996,112.589564294],[-7.12920496999993,112.589428212],[-7.12920548999995,112.5893365],[-7.12925389399993,112.589138038],[-7.12929,112.58899],[-7.12928827399997,112.588979298],[-7.12924,112.58868],[-7.12922434799998,112.588468706],[-7.12922310399995,112.588451909],[-7.12922289199997,112.588449045],[-7.12922,112.58841],[-7.12921390799994,112.588410322],[-7.12920997999993,112.58841053],[-7.12890746199997,112.588426666],[-7.12847,112.58845],[-7.12852,112.58825],[-7.12837,112.58752],[-7.12833,112.58719],[-7.12831073499996,112.587066702],[-7.12828,112.58687],[-7.12820319199994,112.586635056],[-7.12811,112.58635],[-7.12801439499998,112.586164764],[-7.12795,112.58604],[-7.12794391799997,112.585936606],[-7.12794,112.58587],[-7.12794363399996,112.585779153],[-7.12795,112.58562],[-7.12797,112.58526],[-7.12797751699998,112.585132219],[-7.12798,112.58509],[-7.12804,112.58501],[-7.12809019499997,112.58496339],[-7.12818,112.58488],[-7.12818,112.58475],[-7.12816,112.58439],[-7.12814327799992,112.584329382],[-7.12808,112.5841],[-7.12792154999994,112.584157042],[-7.12783,112.58419],[-7.12778098099994,112.584186229],[-7.1277,112.58418],[-7.12769888499997,112.584179257],[-7.12761,112.58412],[-7.12760034999997,112.584089844],[-7.12753,112.58387],[-7.12747,112.58361],[-7.12742714799998,112.583338597],[-7.12738574999997,112.5830764],[-7.12738,112.58304],[-7.12746,112.58294],[-7.12766363499998,112.582778789],[-7.1277,112.58275],[-7.1279,112.58235],[-7.12792,112.58209],[-7.12789322899994,112.58195232],[-7.12785,112.58173],[-7.12782829899993,112.581627694],[-7.12778,112.5814],[-7.12773047999997,112.580865181],[-7.12773,112.58086],[-7.12781,112.58057],[-7.12794,112.58027],[-7.12814,112.58009],[-7.12829,112.57999],[-7.12838811499995,112.579974508],[-7.12848,112.57996],[-7.12869,112.57996],[-7.12884264299993,112.579965653],[-7.12896,112.57997],[-7.12914656899994,112.57996576],[-7.1294,112.57996],[-7.12950440699996,112.579943515],[-7.12959,112.57993],[-7.1298,112.57987],[-7.12989153499996,112.579819656],[-7.13,112.57976],[-7.13009955799993,112.579710221],[-7.1302,112.57966],[-7.13056,112.5795],[-7.13126,112.57913],[-7.13140702099997,112.579064657],[-7.13171,112.57893],[-7.13203,112.57887],[-7.13226,112.57887],[-7.13246,112.57889],[-7.13252646899997,112.578930904],[-7.13259,112.57897],[-7.13271,112.57905],[-7.13275128499993,112.579096446],[-7.13279,112.57914],[-7.13283,112.5793],[-7.13283,112.57946],[-7.13280437599997,112.579605201],[-7.1328,112.57963],[-7.13276760999997,112.579694781],[-7.13272,112.57979],[-7.13265304899994,112.579856951],[-7.13259,112.57992],[-7.13236,112.58005],[-7.13225718399997,112.580094702],[-7.13213,112.58015],[-7.13171,112.5803],[-7.13157844599993,112.580350598],[-7.13132,112.58045],[-7.13121444299998,112.580507576],[-7.1311,112.58057],[-7.13099691099995,112.580660961],[-7.13093,112.58072],[-7.13089761599997,112.580803273],[-7.13086,112.5809],[-7.13086,112.58107],[-7.13086,112.58127],[-7.13096,112.58148],[-7.13114,112.58169],[-7.13117499199996,112.581726936],[-7.13132,112.58188],[-7.13163,112.58215],[-7.1319,112.58237],[-7.13204,112.5825],[-7.13212,112.5826],[-7.13213949999994,112.58262868],[-7.13218169899994,112.582690737],[-7.13229,112.58285],[-7.13259,112.58326],[-7.1328,112.58345],[-7.13286279799996,112.583499341],[-7.13294,112.58356],[-7.1331,112.5836],[-7.13331,112.58362],[-7.13356,112.58364],[-7.13383,112.58364],[-7.13385978999997,112.583633524],[-7.13406,112.58359],[-7.13437,112.58347],[-7.13445375899994,112.583431342],[-7.13476,112.58329],[-7.13498985399997,112.583179036],[-7.13505,112.58315],[-7.13515547199995,112.583105894],[-7.1356,112.58292],[-7.13624,112.58268],[-7.13668,112.5825],[-7.13724,112.58212],[-7.13734592699996,112.582034443],[-7.1375,112.58191],[-7.13756334499993,112.581846655],[-7.13771,112.5817],[-7.13846,112.581],[-7.13902,112.58053],[-7.13963,112.57989],[-7.13968184799995,112.579820329],[-7.14027,112.57903],[-7.14085,112.57814],[-7.14105211999993,112.57773058],[-7.14122239899996,112.577385654],[-7.14124,112.57735],[-7.14128344099993,112.577208817],[-7.14136,112.57696],[-7.14139,112.57673],[-7.14137,112.57647],[-7.14134270899996,112.575978755],[-7.14134,112.57593],[-7.14131,112.57577],[-7.14119,112.57564],[-7.14105097399994,112.57555504],[-7.14101,112.57553],[-7.14099060699994,112.575519558],[-7.14088,112.57546],[-7.14076080499996,112.575450067],[-7.14076,112.57545],[-7.14061,112.57545],[-7.14042,112.57548],[-7.14026463099998,112.575525316],[-7.14018,112.57555],[-7.13988067599996,112.575650977],[-7.13935,112.57583],[-7.13898,112.57593],[-7.13887725599994,112.575960219],[-7.13881,112.57598],[-7.13863,112.57602],[-7.13848,112.576],[-7.13835,112.57596],[-7.13822,112.57588],[-7.13819660999997,112.575850231],[-7.13811,112.57574],[-7.13805,112.57561],[-7.13801,112.57527],[-7.13797,112.57493],[-7.13795560599994,112.574824444],[-7.13788,112.57427],[-7.13779,112.57375],[-7.13769,112.5734],[-7.13767951999995,112.57337761],[-7.13762425999994,112.573259556],[-7.13747,112.57293],[-7.13735,112.57271],[-7.13706,112.5723],[-7.13700759799997,112.572223643],[-7.13671,112.57179],[-7.13658,112.57155],[-7.13656876999994,112.571486363],[-7.13655,112.57138],[-7.13656887799993,112.571273024],[-7.13658,112.57121],[-7.13659649199997,112.571144033],[-7.13663,112.57101],[-7.13667007999993,112.57096491],[-7.13671,112.57092],[-7.13605481899998,112.569546375],[-7.13549765999994,112.56837826],[-7.13526,112.56788],[-7.13512558499997,112.567717287],[-7.13488,112.56742],[-7.13470429999995,112.567200375],[-7.13468,112.56717],[-7.13452,112.56692],[-7.13445879199998,112.566812886],[-7.13444,112.56678],[-7.13439150799996,112.566731508],[-7.13429,112.56663],[-7.13416120699998,112.566624634],[-7.13405,112.56662],[-7.13333,112.56656],[-7.13326798999998,112.566563648],[-7.13316,112.56657],[-7.13200770299994,112.566539273],[-7.13168356999995,112.56653063],[-7.13167869299997,112.5665305],[-7.13166,112.56653],[-7.12959278999995,112.56669577],[-7.12957940299998,112.566696843],[-7.12954,112.5667],[-7.12954,112.56664],[-7.12948,112.56654],[-7.12934,112.5664],[-7.12929040499995,112.566362213],[-7.12922970999995,112.56631597],[-7.12862832199994,112.566086625],[-7.12782688999994,112.56578099],[-7.12778599699993,112.565766795],[-7.12768,112.56573],[-7.12764480699997,112.565711701],[-7.12764370999997,112.56571113],[-7.12743,112.5656],[-7.12726,112.56567],[-7.12705,112.56579],[-7.12690288399995,112.565855005],[-7.12662,112.56598],[-7.12608236999995,112.566222801],[-7.126,112.56626],[-7.12578,112.56632],[-7.12572029699993,112.566317015],[-7.12558,112.56631],[-7.12546145999994,112.566316586],[-7.1254,112.56632],[-7.12534803099993,112.566343622],[-7.12529,112.56637],[-7.12524435799997,112.566392821],[-7.12523,112.5664],[-7.12522465299998,112.566398931],[-7.12508,112.56637],[-7.12502270699997,112.566348515],[-7.125,112.56634],[-7.12488,112.56628],[-7.12485023599993,112.566265118],[-7.12478,112.56623],[-7.12472,112.56614],[-7.12470353999993,112.566079648],[-7.12469,112.56603],[-7.12465897399994,112.565988632],[-7.1246,112.56591],[-7.12457472599993,112.565939487],[-7.12454,112.56598],[-7.12438,112.56603],[-7.12432618499997,112.56607933],[-7.12426,112.56614],[-7.12225,112.56741],[-7.12215205699994,112.567346124],[-7.12203793999993,112.5672717],[-7.12202442099994,112.567262883],[-7.12202,112.56726],[-7.12169,112.56698],[-7.12160805999997,112.566885122],[-7.1215,112.56676],[-7.12123,112.56644],[-7.12122587299996,112.566437937],[-7.121215,112.5664325],[-7.12118419199993,112.566417096],[-7.12113,112.56639],[-7.12103,112.56639],[-7.12089415899993,112.56643528],[-7.12088,112.56644],[-7.12085547599997,112.566453204],[-7.120798,112.56648415],[-7.12062,112.56658],[-7.12061555999998,112.56658291],[-7.12033919299995,112.566764279],[-7.1203,112.56679],[-7.12013,112.56688],[-7.12,112.56688],[-7.11992647199997,112.566856781],[-7.11981,112.56682],[-7.11945121299993,112.566690226],[-7.11934,112.56665],[-7.11911,112.56663],[-7.11889969699996,112.56663478],[-7.11867,112.56664],[-7.11792,112.56672],[-7.11767,112.56672],[-7.11761,112.56672],[-7.11734982799993,112.566712773],[-7.11725,112.56671],[-7.11685,112.56667],[-7.11652,112.56667],[-7.11650348799998,112.566695686],[-7.11643,112.56681],[-7.11641454999994,112.56683598],[-7.11640841499997,112.566846298],[-7.11633610999996,112.5669679],[-7.11621,112.56718],[-7.11599582999997,112.56713717],[-7.11592028099994,112.567122058],[-7.11586,112.56711],[-7.11559,112.56707],[-7.11553,112.56707],[-7.11531370999995,112.567044251],[-7.11511,112.56702],[-7.11468081199996,112.566932573],[-7.11457,112.56691],[-7.11415,112.56676],[-7.11401,112.56667],[-7.11396133999995,112.566600486],[-7.11394,112.56657],[-7.11390061599997,112.566503047],[-7.11374,112.56623],[-7.11367953499996,112.566191522],[-7.11363,112.56616],[-7.11317,112.56599],[-7.11303501399993,112.56593697],[-7.11289,112.56588],[-7.11253076199995,112.565674721],[-7.11205,112.5654],[-7.11188,112.56531],[-7.1115,112.56526],[-7.11138,112.56515],[-7.11127588199997,112.565058897],[-7.11114,112.56494],[-7.11112171299993,112.564938694],[-7.111,112.56493],[-7.11054,112.56491],[-7.11050448599997,112.564888145],[-7.11041,112.56483],[-7.11027,112.56467],[-7.11008074599994,112.564454939],[-7.11005,112.56442],[-7.10994376299993,112.564379139],[-7.10992,112.56437],[-7.10967,112.56433],[-7.10954215199996,112.564317628],[-7.10936,112.5643],[-7.10924,112.56422],[-7.10904,112.564],[-7.10890615899996,112.563861698],[-7.10874,112.56369],[-7.10802,112.56294],[-7.10781714999996,112.56235849],[-7.10776385099996,112.562205704],[-7.10772,112.56208],[-7.10768,112.56191],[-7.10767693699995,112.561887536],[-7.10765,112.56169],[-7.10761,112.56154],[-7.10756878699993,112.561558733],[-7.1075,112.56159],[-7.10745643899998,112.561603068],[-7.1074,112.56162],[-7.10726,112.56155],[-7.10706957999997,112.56170791],[-7.10689715999996,112.56209663],[-7.10689587099995,112.562480772],[-7.10689563999995,112.56254961],[-7.10686724399994,112.562574315],[-7.106756,112.5626711],[-7.10636401999994,112.56268431],[-7.10633089499993,112.562685423],[-7.10628604999994,112.56268693],[-7.10600706999998,112.56284279],[-7.10590573599995,112.562849961],[-7.10553706999997,112.56287605],[-7.10531855299996,112.562913895],[-7.10524103999995,112.56292732],[-7.10494547999997,112.56283921],[-7.10484933299995,112.562846901],[-7.10473657999995,112.56285592],[-7.10467084799996,112.562831742],[-7.10454537999993,112.56278559],[-7.10428426999994,112.56280213],[-7.10412752999997,112.56283645],[-7.10400458999993,112.56316706],[-7.10393356999998,112.56358495],[-7.10396713999995,112.56395094],[-7.10407067999995,112.56421262],[-7.10403410999993,112.56473517],[-7.10408661099996,112.565043555],[-7.10410236999996,112.56513612],[-7.10414889799995,112.565333127],[-7.10420531999995,112.56557203],[-7.10432184299998,112.565821238],[-7.10449904999996,112.56620023],[-7.10453353299994,112.566415746],[-7.10457574999998,112.5666796],[-7.10453893999994,112.56727184],[-7.10446779999995,112.56772458],[-7.10429211999997,112.56821181],[-7.10426903399997,112.568275831],[-7.10420426999997,112.56845543],[-7.10422108999995,112.56862971],[-7.10436381399995,112.568802359],[-7.10439440999994,112.56883937],[-7.10445664699995,112.568915551],[-7.10463704999995,112.56913637],[-7.10470583999995,112.56938052],[-7.10469599399994,112.569494147],[-7.10468772999997,112.56958952],[-7.10466167299995,112.56982949],[-7.10465179999994,112.56992042],[-7.10468655599993,112.570002369],[-7.10475539999993,112.57016469],[-7.10496369999993,112.5703222],[-7.10503319999998,112.57035728],[-7.10531146999995,112.57041049],[-7.10557203999997,112.57055076],[-7.10567819799996,112.570551116],[-7.10578087999994,112.57055146],[-7.10624876999998,112.57047203],[-7.10626,112.57049],[-7.10652,112.57102],[-7.10695,112.5718],[-7.10765,112.57273],[-7.10780771099996,112.572954115],[-7.10784,112.573],[-7.10803,112.57323],[-7.10803,112.57345],[-7.10802762199995,112.573507071],[-7.10802,112.57369],[-7.10812293899994,112.573889445],[-7.10818,112.574],[-7.10824130299994,112.574059445],[-7.10851,112.57432],[-7.10862,112.57457],[-7.10873,112.57472],[-7.10878453799995,112.574848163],[-7.10893,112.57519],[-7.10903,112.57559],[-7.10907,112.5759],[-7.10909644399993,112.576079817],[-7.10912,112.57624],[-7.10908,112.57698],[-7.10912,112.57727],[-7.10916873199994,112.577372879],[-7.10921,112.57746],[-7.10983,112.57781],[-7.10980832999996,112.577846117],[-7.10974,112.57796],[-7.10974,112.57805],[-7.10978,112.57814],[-7.10988,112.57831],[-7.10987389599995,112.578358831],[-7.10987,112.57839],[-7.10985004299994,112.578429914],[-7.10978,112.57857],[-7.1097,112.57887],[-7.10969496499996,112.579016085],[-7.10969248999993,112.57908789],[-7.10969,112.57916],[-7.10971721999994,112.57949571],[-7.10972,112.57953],[-7.10970985899996,112.579535337],[-7.10934,112.57973],[-7.10925,112.57996],[-7.10923,112.58013],[-7.10917331999997,112.58032433],[-7.10916,112.58037],[-7.10914,112.58073],[-7.10903411599998,112.581009149],[-7.10903,112.58102],[-7.10895,112.58128],[-7.10882,112.58148],[-7.10866,112.58158],[-7.10834,112.58166],[-7.10844,112.58239],[-7.10834877599996,112.582423172],[-7.10833,112.58243],[-7.10812535999997,112.58262645],[-7.10808,112.58267],[-7.10772502199995,112.582986944],[-7.10752,112.58317],[-7.10733444999994,112.583347115],[-7.1073,112.58338],[-7.10722519499996,112.583479741],[-7.10709,112.58366],[-7.10701903099994,112.583763227],[-7.10698,112.58382],[-7.10691267199996,112.583838362],[-7.10687,112.58385] ] });
+				GV_Draw_Track(t);
+				
+				// Track #2
+				t = 2; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 012 RW 003 Dusun Pesucinan'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12748117599995,112.59116259],[-7.12737826099993,112.590626526],[-7.12737766199996,112.590607762],[-7.12735534799998,112.590562787],[-7.12713579299998,112.590088298],[-7.12686356299997,112.590144165],[-7.12681328499997,112.590154483],[-7.12682550399995,112.59024323],[-7.12684939399998,112.590416745],[-7.12670744699994,112.590429294],[-7.12670744699994,112.590569836],[-7.12674231199998,112.590579874],[-7.12676482099994,112.590902001],[-7.12677966599995,112.591114437],[-7.12694900599996,112.591116946],[-7.12724769899995,112.591142565],[-7.12748117599995,112.59116259] ] });
+				GV_Draw_Track(t);
+				
+				// Track #3
+				t = 3; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 011 RW 003 Dusun Pesucinan'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12499136499997,112.590306655],[-7.12504995299997,112.591398982],[-7.12597031999996,112.591192864],[-7.12584829599996,112.590389766],[-7.12565156199997,112.590379727],[-7.12564409099997,112.589915436],[-7.12575457999998,112.589895082],[-7.12587568899994,112.589872772],[-7.12585355699997,112.589667781],[-7.12582339299996,112.589388403],[-7.12612204799996,112.589354145],[-7.12612969899993,112.589353267],[-7.12612869199995,112.589307585],[-7.12612720899995,112.589240332],[-7.12610317199994,112.589143434],[-7.12608238399997,112.589059635],[-7.12603870499993,112.588998498],[-7.12603755799995,112.588996893],[-7.12603390999993,112.588990766],[-7.12600767499993,112.588946699],[-7.12600546999994,112.588826741],[-7.12600518399995,112.588811176],[-7.12595374699993,112.588651823],[-7.12592113699998,112.588550797],[-7.12590557299996,112.588459821],[-7.12592626999998,112.588320068],[-7.12594915299997,112.588165561],[-7.12592300499995,112.58813168],[-7.12587273799994,112.588084544],[-7.12580658299993,112.588022509],[-7.12539568399995,112.588147993],[-7.12539882699997,112.58822717],[-7.12540315499996,112.588336219],[-7.12537576199998,112.58836759],[-7.12534961299997,112.588475506],[-7.12533600399996,112.588569231],[-7.12533467199995,112.588578403],[-7.12531206299997,112.588573846],[-7.12518525399997,112.588548287],[-7.12518461199994,112.588551277],[-7.12514540899997,112.588734003],[-7.12475941199995,112.588676281],[-7.12459754199995,112.589479379],[-7.12478680499993,112.589554669],[-7.12491790299992,112.589584696],[-7.12495116499997,112.589592315],[-7.12496736199995,112.589641283],[-7.12507318999997,112.589961238],[-7.12539520299992,112.58993714],[-7.12557623099997,112.589923593],[-7.12557892899997,112.590147903],[-7.12558121099994,112.59033769],[-7.12499136499997,112.590306655] ] });
+				GV_Draw_Track(t);
+				
+				// Track #4
+				t = 4; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 001 RW 001 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12319459699995,112.592595215],[-7.12356655499997,112.592603933],[-7.12379566399994,112.593427108],[-7.12382673299993,112.593418162],[-7.12386539199997,112.593407031],[-7.12389763899995,112.593509939],[-7.12392515999994,112.593597767],[-7.12416517599996,112.593560554],[-7.12418415199994,112.593557612],[-7.12437642899994,112.594177686],[-7.12448298799995,112.59452133],[-7.12448007999996,112.594521753],[-7.12445430299994,112.5945255],[-7.12454960399998,112.594800532],[-7.12502253599996,112.594740066],[-7.12521700499997,112.594715203],[-7.12588214499994,112.59615754],[-7.12617960999995,112.5958458],[-7.12628274399998,112.595655623],[-7.12635406999993,112.5955241],[-7.12648595999997,112.59533568],[-7.12648679999995,112.59533448],[-7.12652168199998,112.595294322],[-7.12648487199993,112.595256274],[-7.12639055799997,112.595158789],[-7.12631244299996,112.595142641],[-7.12619631499996,112.595118634],[-7.12609578099995,112.594884827],[-7.12606681899996,112.594817472],[-7.12599712399998,112.594803064],[-7.12587257599995,112.594777317],[-7.12569997299994,112.594539285],[-7.12568331399996,112.59451631],[-7.12462244499994,112.591529789],[-7.12474197999995,112.591469557],[-7.12505077699996,112.591414344],[-7.12504995299997,112.591398982],[-7.12499136499997,112.590306655],[-7.12499122499997,112.59030405],[-7.12499100999997,112.590300045],[-7.12476688299995,112.590290006],[-7.12472138699996,112.589996567],[-7.12471707699996,112.589968767],[-7.12423930199998,112.590042509],[-7.12416422899997,112.590054096],[-7.12413605199993,112.589957549],[-7.12412148099997,112.589907623],[-7.12357771399996,112.589982401],[-7.12334230499994,112.590014774],[-7.12361636099996,112.59176068],[-7.12347962499996,112.591784],[-7.12330924899993,112.591813057],[-7.12331095199994,112.591822308],[-7.12331254399993,112.591830951],[-7.12318771699995,112.591848504],[-7.12313025099996,112.591856585],[-7.12313137299998,112.591862322],[-7.12305704799996,112.591881446],[-7.12301432899994,112.591892438],[-7.12309855399997,112.592220789],[-7.12319459699995,112.592595215] ] });
+				GV_Draw_Track(t);
+				
+				// Track #5
+				t = 5; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'Wilayah Bervegetasi Pertanian'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12294428199993,112.597075964],[-7.12294457399997,112.597075892],[-7.12299938699994,112.597062382],[-7.12330917599996,112.598085436],[-7.12333437999996,112.597934375],[-7.12335578999995,112.597806054],[-7.12335301099995,112.5977927],[-7.12340918899997,112.597712773],[-7.12343768199997,112.597672235],[-7.12354836599997,112.59743321],[-7.12357713899996,112.597371073],[-7.12369535999994,112.597268952],[-7.12382118899995,112.59716026],[-7.12396999899994,112.597085928],[-7.12408611899997,112.597027926],[-7.12422385699995,112.596959124],[-7.12439395999996,112.596874156],[-7.12444908099997,112.596865987],[-7.12456330099997,112.59684906],[-7.12460000799996,112.5968391],[-7.12468166599996,112.596816944],[-7.12469279599998,112.596813924],[-7.12478742799993,112.596828982],[-7.12505102899996,112.596729712],[-7.12561289099995,112.596518119],[-7.12573374199997,112.596472607],[-7.12575864499996,112.596322026],[-7.12586468699993,112.59619141],[-7.12587653399993,112.596176818],[-7.12587306999995,112.59616705],[-7.12587659699994,112.596163354],[-7.12588214499994,112.59615754],[-7.12521700499997,112.594715203],[-7.12502253599996,112.594740066],[-7.12454960399998,112.594800532],[-7.12445430299994,112.5945255],[-7.12166533599998,112.594930972],[-7.12176917099993,112.595220276],[-7.12178382399998,112.595284267],[-7.12179905499994,112.59535078],[-7.12184393799993,112.595386489],[-7.12189368699995,112.59542607],[-7.12197835799998,112.595441128],[-7.12197835799998,112.595596728],[-7.12202564399996,112.595588319],[-7.12206302799996,112.59558167],[-7.12216264099993,112.595712174],[-7.12217260199998,112.595842677],[-7.12224892199993,112.595937687],[-7.12234194399997,112.59605349],[-7.12284498799994,112.595958122],[-7.12316872799994,112.596982073],[-7.12295233099996,112.597072597],[-7.12294428199993,112.597075964] ] });
+				GV_Draw_Track(t);
+				
+				// Track #6
+				t = 6; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 004 RW 004 Dusun Makam Panjang'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12206479199995,112.599700726],[-7.12347805899998,112.598736149],[-7.12366178499997,112.598610753],[-7.12347752699998,112.598364907],[-7.12332312699994,112.598131507],[-7.12330917599996,112.598085436],[-7.12299938699994,112.597062382],[-7.12294457399997,112.597075892],[-7.12294428199993,112.597075964],[-7.12293825999996,112.597077448],[-7.12208295099992,112.597288254],[-7.12221523799997,112.597617528],[-7.12249634299997,112.598317223],[-7.12170368199997,112.59887971],[-7.12171038199995,112.598885144],[-7.12172185499998,112.59889445],[-7.12177102599998,112.598956391],[-7.12182146799995,112.599019934],[-7.12178092999994,112.599064501],[-7.12176667999995,112.599080167],[-7.12184081899994,112.599234498],[-7.12206479199995,112.599700726] ] });
+				GV_Draw_Track(t);
+				
+				// Track #7
+				t = 7; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 005 RW 004 Dusun Makam Panjang'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12329643399994,112.600874384],[-7.12447364999997,112.600362614],[-7.12455018499997,112.6004526],[-7.12467959999998,112.60023151],[-7.12467250299994,112.600225547],[-7.12467215799995,112.600225257],[-7.12465718399994,112.600212676],[-7.12446241999993,112.60004904],[-7.12439411899993,112.60001884],[-7.12426757999998,112.59996289],[-7.12426417299997,112.599951841],[-7.12424269399997,112.599970781],[-7.12423411399993,112.599978347],[-7.12423333899994,112.599977],[-7.12422890099998,112.599969289],[-7.12419491999998,112.599910246],[-7.12413605599994,112.599807967],[-7.12415392899993,112.599710186],[-7.12415691799993,112.599693836],[-7.12415549199994,112.599690983],[-7.12415346199998,112.599686923],[-7.12418677599993,112.59961203],[-7.12418677599993,112.599489356],[-7.12423540899994,112.599428092],[-7.12426792699995,112.599387128],[-7.12396906599997,112.599053816],[-7.12381101699998,112.598877548],[-7.12376,112.59875],[-7.12375540399995,112.598737745],[-7.12375384199993,112.598733579],[-7.12366178499997,112.598610753],[-7.12347805899998,112.598736149],[-7.12206479199995,112.599700726],[-7.12207049899996,112.599712606],[-7.12223236999995,112.599664922],[-7.12247642099993,112.599775348],[-7.12261226399994,112.599958918],[-7.12269556899997,112.600071491],[-7.12286646799993,112.600216526],[-7.12303,112.60047],[-7.12317,112.60069],[-7.12328930699994,112.600877482],[-7.12329643399994,112.600874384] ] });
+				GV_Draw_Track(t);
+				
+				// Track #8
+				t = 8; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 003 RW 004 Dusun Makam Panjang'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12028825699997,112.597148196],[-7.12031124799995,112.597143318],[-7.12033946799994,112.597226964],[-7.12046175099994,112.597589416],[-7.12050740699993,112.597664566],[-7.12055987899993,112.597750936],[-7.12061117099995,112.597835364],[-7.12088126499998,112.598182935],[-7.12093491299993,112.598251972],[-7.12098969999994,112.598297146],[-7.12123375199997,112.598558153],[-7.12125143399993,112.598580832],[-7.12128853899998,112.598628424],[-7.12151764799995,112.598728811],[-7.12155637699993,112.598760226],[-7.12170368199997,112.59887971],[-7.12249634299997,112.598317223],[-7.12221523799997,112.597617528],[-7.12208295099992,112.597288254],[-7.12293825999996,112.597077448],[-7.12294428199993,112.597075964],[-7.12295233099996,112.597072597],[-7.12316872799994,112.596982073],[-7.12284498799994,112.595958122],[-7.12234194399997,112.59605349],[-7.12224892199993,112.595937687],[-7.12217260199998,112.595842677],[-7.12216264099993,112.595712174],[-7.12206302799996,112.59558167],[-7.12202564399996,112.595588319],[-7.12197835799998,112.595596728],[-7.12197835799998,112.595441128],[-7.12189368699995,112.59542607],[-7.12184393799993,112.595386489],[-7.12179905499994,112.59535078],[-7.12178382399998,112.595284267],[-7.12176917099993,112.595220276],[-7.12166533599998,112.594930972],[-7.12159982899993,112.594748456],[-7.12114263499996,112.594888928],[-7.12099674999996,112.594933751],[-7.12078300299993,112.594999424],[-7.12083778999994,112.595150005],[-7.12083345299993,112.595171859],[-7.12080790699997,112.595300586],[-7.12072821599997,112.595405993],[-7.12069658799993,112.595429174],[-7.12067342899996,112.595446147],[-7.12056809599994,112.595492588],[-7.12051404799996,112.595516418],[-7.12053895099996,112.595656961],[-7.12024011199998,112.595767387],[-7.12037489999994,112.596122311],[-7.12037534299998,112.596123477],[-7.12039451199996,112.596173955],[-7.12048842799993,112.596070296],[-7.12049910599995,112.59605851],[-7.12052864899994,112.596041838],[-7.12062362199992,112.595988239],[-7.12078798399995,112.596600601],[-7.12045176699996,112.596683099],[-7.12021520899998,112.596741143],[-7.12025487399995,112.596962172],[-7.12028825699997,112.597148196] ] });
+				GV_Draw_Track(t);
+				
+				// Track #9
+				t = 9; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 005 RW 001 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12114263499996,112.594888928],[-7.12159982899993,112.594748456],[-7.12166533599998,112.594930972],[-7.12445430299994,112.5945255],[-7.12448007999996,112.594521753],[-7.12448298799995,112.59452133],[-7.12437642899994,112.594177686],[-7.12418415199994,112.593557612],[-7.12416517599996,112.593560554],[-7.12392515999994,112.593597767],[-7.12389763899995,112.593509939],[-7.12386539199997,112.593407031],[-7.12382673299993,112.593418162],[-7.12379566399994,112.593427108],[-7.12356655499997,112.592603933],[-7.12319459699995,112.592595215],[-7.12320359299997,112.592630284],[-7.12298195499994,112.592647852],[-7.12293404599995,112.592446204],[-7.12289728399998,112.592291477],[-7.12253929599996,112.592345086],[-7.12227719599997,112.592384336],[-7.12226225399996,112.592293987],[-7.12209066499997,112.592334675],[-7.12209519599998,112.592547786],[-7.12209540299995,112.592557504],[-7.12204692899996,112.59258624],[-7.12196839599994,112.592632794],[-7.12191858999995,112.593157318],[-7.12151019999993,112.593465538],[-7.12135328699998,112.593583964],[-7.12107850199993,112.593575819],[-7.12108922199997,112.593644241],[-7.12109678399997,112.593692507],[-7.12131593199996,112.593707565],[-7.12130003799996,112.593786052],[-7.12126612599997,112.593953514],[-7.12127590499995,112.59395938],[-7.12147531299996,112.594078998],[-7.12149312299994,112.594141127],[-7.12154006099996,112.59430487],[-7.12145256399998,112.594326914],[-7.12142052599995,112.594334986],[-7.12145538999994,112.594480547],[-7.12135401899997,112.594531627],[-7.12126612599997,112.594575915],[-7.12114263499996,112.594888928] ] });
+				GV_Draw_Track(t);
+				
+				// Track #10
+				t = 10; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 004 RW 001 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12171091499994,112.591772588],[-7.12180437199993,112.591880061],[-7.12208793199994,112.592206148],[-7.12209066499997,112.592334675],[-7.12226225399996,112.592293987],[-7.12227719599997,112.592384336],[-7.12253929599996,112.592345086],[-7.12289728399998,112.592291477],[-7.12293404599995,112.592446204],[-7.12298195499994,112.592647852],[-7.12320359299997,112.592630284],[-7.12319459699995,112.592595215],[-7.12309855399997,112.592220789],[-7.12301432899994,112.591892438],[-7.12305704799996,112.591881446],[-7.12313137299998,112.591862322],[-7.12313025099996,112.591856585],[-7.12309650899994,112.591684134],[-7.12305168299997,112.591689154],[-7.12304275399992,112.591608161],[-7.12303674199995,112.591553631],[-7.12296203199998,112.591566179],[-7.12296950299998,112.591591276],[-7.12289977399996,112.591608844],[-7.12274701999996,112.590638193],[-7.12266363399994,112.590108333],[-7.12266319499997,112.590105545],[-7.12182644799998,112.590105545],[-7.12180312199996,112.590104476],[-7.12145349199994,112.59008846],[-7.12152960199995,112.590574949],[-7.12171687399996,112.591771973],[-7.12171610199994,112.591772053],[-7.12171091499994,112.591772588] ] });
+				GV_Draw_Track(t);
+				
+				// Track #11
+				t = 11; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 003 RW 001 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12313025099996,112.591856585],[-7.12318771699995,112.591848504],[-7.12331254399993,112.591830951],[-7.12331095199994,112.591822308],[-7.12330924899993,112.591813057],[-7.12298706699994,112.590063625],[-7.12292769899994,112.590071789],[-7.12292656699998,112.590071945],[-7.12292704999993,112.590074744],[-7.12292716799993,112.590075428],[-7.12266363399994,112.590108333],[-7.12274701999996,112.590638193],[-7.12289977399996,112.591608844],[-7.12296950299998,112.591591276],[-7.12296203199998,112.591566179],[-7.12303674199995,112.591553631],[-7.12304275399992,112.591608161],[-7.12305168299997,112.591689154],[-7.12309650899994,112.591684134],[-7.12313025099996,112.591856585] ] });
+				GV_Draw_Track(t);
+				
+				// Track #12
+				t = 12; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 002 RW 001 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12330924899993,112.591813057],[-7.12347962499996,112.591784],[-7.12361636099996,112.59176068],[-7.12334230499994,112.590014774],[-7.12298706699994,112.590063625],[-7.12330924899993,112.591813057] ] });
+				GV_Draw_Track(t);
+				
+				// Track #13
+				t = 13; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 010 RW 003 Dusun Kedung'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12292656699998,112.590071945],[-7.12292769899994,112.590071789],[-7.12298706699994,112.590063625],[-7.12334230499994,112.590014774],[-7.12357771399996,112.589982401],[-7.12412148099997,112.589907623],[-7.12412626299994,112.589906965],[-7.12413309999994,112.589906025],[-7.12407706799996,112.589419147],[-7.12394259199993,112.58943295],[-7.12393488599997,112.589408097],[-7.12392391499998,112.589372717],[-7.12388056499998,112.589377117],[-7.12383737599993,112.589381501],[-7.12382595399993,112.589326138],[-7.12381122799996,112.589254762],[-7.12379303299997,112.589255908],[-7.12379130599993,112.589256017],[-7.12378003399994,112.589255868],[-7.12369667399997,112.589254762],[-7.12367799699996,112.589179472],[-7.12360343199992,112.589184545],[-7.12338289499996,112.589199549],[-7.12330913799997,112.589279007],[-7.12327456599996,112.58931625],[-7.12322079799998,112.589326495],[-7.12297821899995,112.589372717],[-7.12297584299995,112.589362286],[-7.12296078699995,112.589296172],[-7.12286495799998,112.589306446],[-7.12279584999993,112.589313855],[-7.12285515799994,112.58965781],[-7.12292656699998,112.590071945] ] });
+				GV_Draw_Track(t);
+				
+				// Track #14
+				t = 14; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 009 RW 003 Dusun Kedung'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12180312199996,112.590104476],[-7.12182644799998,112.590105545],[-7.12266319499997,112.590105545],[-7.12266363399994,112.590108333],[-7.12292716799993,112.590075428],[-7.12292704999993,112.590074744],[-7.12292656699998,112.590071945],[-7.12285515799994,112.58965781],[-7.12279584999993,112.589313855],[-7.12279518099996,112.589309975],[-7.12265074299995,112.589320014],[-7.12259097499998,112.588672516],[-7.12236435699998,112.58872522],[-7.12233087899995,112.588667383],[-7.12227719599997,112.588574639],[-7.12184718099996,112.588607204],[-7.12184637099995,112.588607265],[-7.12185957099996,112.588691776],[-7.12188870599994,112.58887831],[-7.12193322199994,112.589064165],[-7.12194100299996,112.589096652],[-7.12194939199998,112.589120607],[-7.12201571199995,112.589309975],[-7.12178162199996,112.589370208],[-7.12180312199996,112.590104476] ] });
+				GV_Draw_Track(t);
+				
+				// Track #15
+				t = 15; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 006 RW 002 Dusun Kuti'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12097364599992,112.591690962],[-7.12118643599996,112.591674096],[-7.12119521799997,112.591740473],[-7.12120635799994,112.591824677],[-7.12141937399997,112.591802686],[-7.12171091499994,112.591772588],[-7.12171610199994,112.591772053],[-7.12171687399996,112.591771973],[-7.12152960199995,112.590574949],[-7.12145349199994,112.59008846],[-7.12144791899993,112.590052841],[-7.12107254699993,112.590001329],[-7.12086269399992,112.589972531],[-7.12065408799998,112.590046334],[-7.12097364599992,112.591690962] ] });
+				GV_Draw_Track(t);
+				
+				// Track #16
+				t = 16; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 009 RW 002 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12070758899995,112.593268597],[-7.12071576499994,112.593433383],[-7.12077580099998,112.593439865],[-7.12085522299998,112.593448441],[-7.12084526099994,112.593568905],[-7.12107850199993,112.593575819],[-7.12135328699998,112.593583964],[-7.12151019999993,112.593465538],[-7.12191858999995,112.593157318],[-7.12196839599994,112.592632794],[-7.12204692899996,112.59258624],[-7.12209540299995,112.592557504],[-7.12209519599998,112.592547786],[-7.12209066499997,112.592334675],[-7.12208793199994,112.592206148],[-7.12180437199993,112.591880061],[-7.12171091499994,112.591772588],[-7.12141937399997,112.591802686],[-7.12120635799994,112.591824677],[-7.12119521799997,112.591740473],[-7.12118643599996,112.591674096],[-7.12097364599992,112.591690962],[-7.12097427899994,112.591694216],[-7.12097475799993,112.591696683],[-7.12084125599995,112.591713767],[-7.12081786799996,112.59171676],[-7.12080541599994,112.591618883],[-7.12077304199994,112.591621392],[-7.12059871899993,112.591621392],[-7.12058792099998,112.591565891],[-7.12057776799998,112.591513709],[-7.12051204299996,112.591507595],[-7.12042688699995,112.591499673],[-7.12040198299997,112.591411834],[-7.12020275699996,112.591424382],[-7.12016449199996,112.591293766],[-7.12012555699994,112.591160866],[-7.11984415199993,112.591211066],[-7.11991138899998,112.591424382],[-7.11957112399995,112.591587325],[-7.11957270399995,112.591591276],[-7.11948531199994,112.591648592],[-7.11925892199997,112.59179707],[-7.11938841899996,112.592123329],[-7.11974204599994,112.592012903],[-7.11980181399997,112.592228735],[-7.11997115699995,112.5921936],[-7.12032478299994,112.592173522],[-7.12036462899994,112.592705575],[-7.12071327399997,112.592700556],[-7.12071825499993,112.593267744],[-7.12071081799996,112.593268339],[-7.12070758899995,112.593268597] ] });
+				GV_Draw_Track(t);
+				
+				// Track #17
+				t = 17; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'Pondok Al Ghoribiyah'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12037489999994,112.596122311],[-7.12024011199998,112.595767387],[-7.12053895099996,112.595656961],[-7.12051404799996,112.595516418],[-7.12056809599994,112.595492588],[-7.12067342899996,112.595446147],[-7.12069658799993,112.595429174],[-7.12072821599997,112.595405993],[-7.12080790699997,112.595300586],[-7.12083345299993,112.595171859],[-7.12083778999994,112.595150005],[-7.12078300299993,112.594999424],[-7.12099674999996,112.594933751],[-7.12114263499996,112.594888928],[-7.12126612599997,112.594575915],[-7.12135401899997,112.594531627],[-7.12145538999994,112.594480547],[-7.12142052599995,112.594334986],[-7.12145256399998,112.594326914],[-7.12154006099996,112.59430487],[-7.12149312299994,112.594141127],[-7.12147531299996,112.594078998],[-7.12127590499995,112.59395938],[-7.12126612599997,112.593953514],[-7.12130003799996,112.593786052],[-7.12131593199996,112.593707565],[-7.12109678399997,112.593692507],[-7.12108922199997,112.593644241],[-7.12107850199993,112.593575819],[-7.12084526099994,112.593568905],[-7.12085522299998,112.593448441],[-7.12077580099998,112.593439865],[-7.12071576499994,112.593433383],[-7.12070758899995,112.593268597],[-7.12040447399994,112.59329284],[-7.12040032799996,112.593017106],[-7.12039949299998,112.592961562],[-7.12038012799997,112.592965069],[-7.11983381699997,112.593063997],[-7.11983699199993,112.593071851],[-7.11984557499994,112.593093081],[-7.11984249999995,112.593098],[-7.11983106599996,112.593116295],[-7.11987695399995,112.59322688],[-7.11990640799996,112.59329786],[-7.12001100199996,112.59329284],[-7.12001657099995,112.59331631],[-7.12006578899997,112.593523731],[-7.12039949299998,112.593604041],[-7.12039402899995,112.593766477],[-7.12038953199993,112.593900183],[-7.12027995699998,112.594025668],[-7.12013551799993,112.594131074],[-7.11999605999995,112.594191307],[-7.11950297499993,112.594316791],[-7.11942938699997,112.59444169],[-7.11970971899996,112.595549128],[-7.11992633099993,112.596404846],[-7.12017103499994,112.596250717],[-7.12037489999994,112.596122311] ] });
+				GV_Draw_Track(t);
+				
+				// Track #18
+				t = 18; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 001 RW 004 Dusun Makam Panjang'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.11889754899994,112.593782465],[-7.11902762599993,112.594462869],[-7.11903912899993,112.59452304],[-7.11941912699996,112.59443927],[-7.11942826499995,112.594437255],[-7.11942902699997,112.594440266],[-7.11942938699997,112.59444169],[-7.11950297499993,112.594316791],[-7.11999605999995,112.594191307],[-7.12013551799993,112.594131074],[-7.12027995699998,112.594025668],[-7.12038953199993,112.593900183],[-7.12039402899995,112.593766477],[-7.12039949299998,112.593604041],[-7.12006578899997,112.593523731],[-7.12001657099995,112.59331631],[-7.12001100199996,112.59329284],[-7.11990640799996,112.59329786],[-7.11987695399995,112.59322688],[-7.11983106599996,112.593116295],[-7.11981,112.59315],[-7.11977920199996,112.593180798],[-7.11974,112.59322],[-7.11969240599996,112.593246441],[-7.11965,112.59327],[-7.11955,112.59331],[-7.11951009999996,112.5933233],[-7.11946,112.59334],[-7.11934,112.5934],[-7.11928739999996,112.593419127],[-7.11923,112.59344],[-7.11921537299998,112.593449001],[-7.11902233999996,112.593501144],[-7.11895713399997,112.593542214],[-7.11886295899996,112.593601531],[-7.11889754899994,112.593782465] ] });
+				GV_Draw_Track(t);
+				
+				// Track #19
+				t = 19; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 002 RW 004 Dusun Makam Panjang'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12028825699997,112.597148196],[-7.12025487399995,112.596962172],[-7.12021520899998,112.596741143],[-7.12045176699996,112.596683099],[-7.12078798399995,112.596600601],[-7.12062362199992,112.595988239],[-7.12052864899994,112.596041838],[-7.12049910599995,112.59605851],[-7.12048842799993,112.596070296],[-7.12039451199996,112.596173955],[-7.12037534299998,112.596123477],[-7.12037489999994,112.596122311],[-7.12017103499994,112.596250717],[-7.11992633099993,112.596404846],[-7.11970971899996,112.595549128],[-7.11942938699997,112.59444169],[-7.11942902699997,112.594440266],[-7.11942826499995,112.594437255],[-7.11941912699996,112.59443927],[-7.11903912899993,112.59452304],[-7.11915740399996,112.595141715],[-7.11949052299997,112.596884195],[-7.11961648099998,112.596864361],[-7.11964990399997,112.596859098],[-7.11970469099998,112.596813924],[-7.11974161299997,112.596941922],[-7.11982920799994,112.597245589],[-7.12028825699997,112.597148196] ] });
+				GV_Draw_Track(t);
+				
+				// Track #20
+				t = 20; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 013 RW 002 Dusun Kuti'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.11983381699997,112.593063997],[-7.12038012799997,112.592965069],[-7.12039949299998,112.592961562],[-7.12040032799996,112.593017106],[-7.12040447399994,112.59329284],[-7.12070758899995,112.593268597],[-7.12071081799996,112.593268339],[-7.12071825499993,112.593267744],[-7.12071327399997,112.592700556],[-7.12036462899994,112.592705575],[-7.12032478299994,112.592173522],[-7.11997115699995,112.5921936],[-7.11980181399997,112.592228735],[-7.11974204599994,112.592012903],[-7.11938841899996,112.592123329],[-7.11925892199997,112.59179707],[-7.11948531199994,112.591648592],[-7.11957270399995,112.591591276],[-7.11957112399995,112.591587325],[-7.11931370899993,112.590943778],[-7.11930987399995,112.590945102],[-7.11930688599995,112.590946133],[-7.11839726599993,112.591259998],[-7.11837396299995,112.591288179],[-7.11832255599995,112.591350347],[-7.11828270999996,112.591455753],[-7.11827676199994,112.591535682],[-7.11826776799995,112.591656528],[-7.11839681199996,112.592287491],[-7.11852145999995,112.59220928],[-7.11856421299996,112.592182455],[-7.1186,112.59216],[-7.11863138799993,112.592142654],[-7.11874016599995,112.59208254],[-7.11894513999994,112.592539936],[-7.11940855199992,112.592490948],[-7.11965737499997,112.592464645],[-7.11966669399993,112.592497223],[-7.11981675599998,112.593021795],[-7.11983381699997,112.593063997] ] });
+				GV_Draw_Track(t);
+				
+				// Track #21
+				t = 21; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 008 RW 002 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.11930688599995,112.590946133],[-7.11930987399995,112.590945102],[-7.11931370899993,112.590943778],[-7.11957112399995,112.591587325],[-7.11991138899998,112.591424382],[-7.11984415199993,112.591211066],[-7.12012555699994,112.591160866],[-7.12016449199996,112.591293766],[-7.12020275699996,112.591424382],[-7.12040198299997,112.591411834],[-7.12042688699995,112.591499673],[-7.12051204299996,112.591507595],[-7.12057776799998,112.591513709],[-7.12058630699994,112.591514503],[-7.12058875799994,112.591514731],[-7.12055714199994,112.591363386],[-7.12030542199994,112.590158426],[-7.12030518599994,112.590157294],[-7.12030486099997,112.590155738],[-7.12019843599995,112.590085791],[-7.12019030599993,112.590080448],[-7.12014287899996,112.590085],[-7.11987652399995,112.590110564],[-7.11988098499995,112.590265652],[-7.11988648599993,112.5904569],[-7.11980941499996,112.590471694],[-7.11978189199993,112.590476977],[-7.11976115599998,112.590556385],[-7.11973208499995,112.590667713],[-7.11933679699996,112.590849188],[-7.11928382499997,112.590873507],[-7.11930688599995,112.590946133] ] });
+				GV_Draw_Track(t);
+				
+				// Track #22
+				t = 22; trk[t] = {info:[],segments:[]};
+				trk[t].info.name = 'RT 007 RW 002 Dusun Leran'; trk[t].info.desc = 'Desa Leran'; trk[t].info.shortdesc = '-'; trk[t].info.clickable = true;
+				trk[t].info.color = '#ff0000'; trk[t].info.width = 3; trk[t].info.opacity = 1; trk[t].info.hidden = false; trk[t].info.z_index = null;
+				trk[t].info.outline_color = 'black'; trk[t].info.outline_width = 0; trk[t].info.fill_color = '#ff0000'; trk[t].info.fill_opacity = 0.01;
+				trk[t].segments.push({ points:[ [-7.12057776799998,112.591513709],[-7.12058792099998,112.591565891],[-7.12059871899993,112.591621392],[-7.12077304199994,112.591621392],[-7.12080541599994,112.591618883],[-7.12081786799996,112.59171676],[-7.12084125599995,112.591713767],[-7.12097475799993,112.591696683],[-7.12097427899994,112.591694216],[-7.12097364599992,112.591690962],[-7.12065408799998,112.590046334],[-7.12064852599997,112.590017706],[-7.12030542199994,112.590158426],[-7.12055714199994,112.591363386],[-7.12058875799994,112.591514731],[-7.12058630699994,112.591514503],[-7.12057776799998,112.591513709] ] });
+				GV_Draw_Track(t);
+				
+				t = 1; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 2; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 3; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 4; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 5; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 6; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 7; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 8; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 9; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 10; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 11; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 12; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 13; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 14; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 15; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 16; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 17; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 18; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 19; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 20; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 21; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				t = 22; GV_Add_Track_to_Tracklist({bullet:'- ',name:trk[t].info.name,desc:trk[t].info.desc,shortdesc:trk[t].info.shortdesc,color:trk[t].info.color,number:t});
+				
+				
+				
+				
+				
+				
+				// This set of options instructs the "GV_Finish_Map" function to load markers from an external file
+				gv_options.dynamic_data = [
+					{
+					url:'https://docs.google.com/spreadsheets/d/1Zmre6zG4b0_NbXM_Mj3PINuI-_0wIfQn5t_qdA47_3w/edit?gid=0#gid=0', reload_on_move:false,
+					field_alias:{}, // e.g.: field_alias:{name:'id',desc:'comment',folder:'category'}
+					synthesize_fields:{ // you can include YOUR document's field names in {curly brackets}; this is like field_alias, but more powerful
+						name:'{nama}',
+						desc:'Koordinat = {latitude}, {longitude}<br>Alamat = {alamat}',
+						label:'',
+						folder:'{alamat}'
+					},
+					ignore_styles:false,
+					track_options:{color:'#e60000',width:'3',opacity:'0.9'},
+					autozoom:false, zoom_default:8, zoom_adjustment:0 // e.g., to zoom out one step, set zoom_adjustment to -1
+					}
+				];
+				
+				GV_Finish_Map();
+					
+			}
+			GV_Map(); // execute the above code
+			// https://www.gpsvisualizer.com/map_input?bg_map=ARCGIS_HYBRID&form=leaflet&google_wpt_sym=google&synthesize_desc=Koordinat%20%3D%20%7Blat%7D%2C%20%7Blong%7D%3Cbr%3EAlamat%20%3D%20%7BAlamat%7D&synthesize_folder=%7BAlamat%7D&synthesize_name=%7BNama%7D&units=metric&wpt_color=orange&wpt_colorize=desc&wpt_list=desc
+		</script>
+		
+		
+		
+	</body>
+	
+</html>
