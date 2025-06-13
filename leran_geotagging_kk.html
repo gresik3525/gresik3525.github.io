@@ -115,13 +115,13 @@
 			  gv_options.tracklist_options.min_width = 100; // minimum width of the tracklist, in pixels
 			  gv_options.tracklist_options.max_width = 180; // maximum width of the tracklist, in pixels
 			  gv_options.tracklist_options.min_height = 0; // minimum height of the tracklist, in pixels; if the list is longer, scrollbars will appear
-			  gv_options.tracklist_options.max_height = 296; // maximum height of the tracklist, in pixels; if the list is longer, scrollbars will appear
+			  gv_options.tracklist_options.max_height = 1000; // maximum height of the tracklist, in pixels; if the list is longer, scrollbars will appear
 			  gv_options.tracklist_options.desc = true;  // true|false: should tracks' descriptions be shown in the list
 			  gv_options.tracklist_options.toggle = false;  // true|false: should clicking on a track's name turn it on or off?
 			  gv_options.tracklist_options.checkboxes = true;  // true|false: should there be a separate icon/checkbox for toggling visibility?
 			  gv_options.tracklist_options.zoom_links = true;  // true|false: should each item include a small icon that will zoom to that track?
 			  gv_options.tracklist_options.highlighting = true;  // true|false: should the track be highlighted when you mouse over the name in the list?
-			  gv_options.tracklist_options.tooltips = false;  // true|false: should the name of the track appear on the map when you mouse over the name in the list?
+			  gv_options.tracklist_options.tooltips = true;  // true|false: should the name of the track appear on the map when you mouse over the name in the list?
 			  gv_options.tracklist_options.draggable = true;  // true|false: can it be moved around the screen?
 			  gv_options.tracklist_options.collapsible = true;  // true|false: can it be collapsed by double-clicking its top bar?
 			  gv_options.tracklist_options.header = 'Satuan Lingkungan Setempat'; // HTML code; be sure to put backslashes in front of any single quotes, and don't include any line breaks
@@ -130,7 +130,7 @@
 
 
 			// marker-related options:
-			gv_options.default_marker = { color:'orange',icon:'google',scale:1 }; // icon can be a URL, but be sure to also include size:[w,h] and optionally anchor:[x,y]
+			gv_options.default_marker = { color:'orange',icon:'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7nnMjUjkakwCDkxRmoJLtqSd5NvgdV3lY72iJDgp7Oa9gi81OulGQNUR4pB41eLjOjqHTFHMhxN7FTsoTvGHEYkAqS15g3RQNj_LuxwtHELR5IGoGOAF9wz5aj0h3omDjd3TOlZ0hlaEJV-3ClHbzUmLRBhdFKori-O5Mavcptq9oTrLRvDB1KOkhqgj_/s320/%E2%80%94Pngtree%E2%80%94gold%20geo%20tag%20location_5345401.png',scale:1 }; // icon can be a URL, but be sure to also include size:[w,h] and optionally anchor:[x,y]
 			gv_options.vector_markers = true; // are the icons on the map in embedded SVG format?
 			gv_options.marker_tooltips = true; // do the names of the markers show up when you mouse-over them?
 			gv_options.marker_shadows = true; // true|false: do the standard markers have "shadows" behind them?
@@ -147,25 +147,25 @@
 			gv_options.marker_list_options = {};  // options for a dynamically-created list of markers
 			  gv_options.marker_list_options.enabled = true;  // true|false: enable or disable the marker list altogether
 			  gv_options.marker_list_options.floating = true;  // is the list a floating box inside the map itself?
-			  gv_options.marker_list_options.position = ['RIGHT_BOTTOM',6,38];  // floating list only: position within map
+			  gv_options.marker_list_options.position = ['LEFT_TOP',1,1];  // floating list only: position within map
 			  gv_options.marker_list_options.min_width = 160; // minimum width, in pixels, of the floating list
 			  gv_options.marker_list_options.max_width = 160;  // maximum width
 			  gv_options.marker_list_options.min_height = 0;  // minimum height, in pixels, of the floating list
-			  gv_options.marker_list_options.max_height = 296;  // maximum height
+			  gv_options.marker_list_options.max_height = 1000;  // maximum height
 			  gv_options.marker_list_options.draggable = true;  // true|false, floating list only: can it be moved around the screen?
 			  gv_options.marker_list_options.collapsible = true;  // true|false, floating list only: can it be collapsed by double-clicking its top bar?
 			  gv_options.marker_list_options.include_tickmarks = false;  // true|false: are distance/time tickmarks included in the list?
 			  gv_options.marker_list_options.include_trackpoints = false;  // true|false: are "trackpoint" markers included in the list?
-			  gv_options.marker_list_options.dividers = false;  // true|false: will a thin line be drawn between each item in the list?
+			  gv_options.marker_list_options.dividers = true;  // true|false: will a thin line be drawn between each item in the list?
 			  gv_options.marker_list_options.desc = true;  // true|false: will the markers' descriptions be shown below their names in the list?
 			  gv_options.marker_list_options.icons = true;  // true|false: should the markers' icons appear to the left of their names in the list?
 			  gv_options.marker_list_options.icon_scale = 'x1'; // size of the icons in the list; you can also supply a size in pixels (e.g. '16px')
 			  gv_options.marker_list_options.thumbnails = false;  // true|false: should markers' thumbnails be shown in the list?
-			  gv_options.marker_list_options.folders_collapsed = false;  // true|false: do folders in the list start out in a collapsed state?
+			  gv_options.marker_list_options.folders_collapsed = true;  // true|false: do folders in the list start out in a collapsed state?
 			  gv_options.marker_list_options.folders_hidden = false;  // true|false: do folders in the list start out in a hidden state?
 			  gv_options.marker_list_options.collapsed_folders = []; // an array of folder names
 			  gv_options.marker_list_options.hidden_folders = []; // an array of folder names
-			  gv_options.marker_list_options.count_folder_items = false;  // true|false: list the number of items in each folder?
+			  gv_options.marker_list_options.count_folder_items = true;  // true|false: list the number of items in each folder?
 			  gv_options.marker_list_options.folder_zoom = true;  // true|false: is there a zoom link next to each folder name?
 			  gv_options.marker_list_options.folders_first = true;  // true|false: do folders in the list come before un-foldered markers?
 			  gv_options.marker_list_options.wrap_names = true;  // true|false: should marker's names be allowed to wrap onto more than one line?
@@ -181,7 +181,7 @@
 			  gv_options.marker_list_options.toggle = false;  // true|false: does a marker disappear if you click on its name in the list?
 			  gv_options.marker_list_options.help_tooltips = false;  // true|false: do "tooltips" appear on marker names that tell you what happens when you click?
 			  gv_options.marker_list_options.id = 'gv_marker_list';  // id of a DIV tag that holds the list
-			  gv_options.marker_list_options.header = ''; // HTML code; be sure to put backslashes in front of any single quotes, and don't include any line breaks
+			  gv_options.marker_list_options.header = '<b>Data Penduduk</b>'; // HTML code; be sure to put backslashes in front of any single quotes, and don't include any line breaks
 			  gv_options.marker_list_options.footer = ''; // HTML code
 			gv_options.marker_filter_options = {};  // options for removing waypoints that are out of the current view
 			  gv_options.marker_filter_options.enabled = false;  // true|false: should out-of-range markers be removed?
