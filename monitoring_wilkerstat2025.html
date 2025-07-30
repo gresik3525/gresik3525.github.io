@@ -61,7 +61,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-6">
                     <div class="flex items-center">
-                        <h1 class="text-3xl font-bold text-gray-900">Sistem Monitoring Data Wilkerstat SE2026 BPS Kabupaten Gresik</h1>
+                        <h1 class="text-3xl font-bold text-gray-900">Sistem Monitoring Data</h1>
                     </div>
                     <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">
                         Logout
@@ -77,18 +77,6 @@
                     <div class="ml-3">
                         <p class="text-sm text-blue-700">
                             <strong>Kondisi Data:</strong> <span id="kondisiData">Data diambil dari sheet kondisi_data</span>
-                        </p><br>
-						<p class="text-sm text-blue-700">
-                            <strong>Informasi Status Tagging:</strong> 
-                        </p>
-						<p class="text-sm text-green-700">
-                            <strong>Sesuai:</strong> Jika Jumlah Tagging Kurang dari 8 Tagging
-                        </p>
-						<p class="text-sm text-blue-700">
-                            <strong>Konfirmasi:</strong> Jika Jumlah Tagging Lebih dari 8 Tagging
-                        </p>
-						<p class="text-sm text-yellow-700">
-                            <strong>Belum Tagging:</strong> Jika Jumlah Tagging 0
                         </p>
                     </div>
                 </div>
@@ -397,6 +385,40 @@
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-600">Persentase Selesai</p>
                             <p class="text-2xl font-bold text-blue-600" id="avgPersentase">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Line Chart Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Grafik Project Selesai per Kecamatan</h2>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6">
+                    <!-- Chart Container -->
+                    <div class="overflow-x-auto">
+                        <svg id="lineChart" width="800" height="400" class="min-w-full">
+                            <!-- Chart will be rendered here -->
+                            <defs>
+                                <linearGradient id="chartBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#F8FAFC;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#F1F5F9;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:0.1" />
+                                </linearGradient>
+                            </defs>
+                            <text x="400" y="200" text-anchor="middle" class="fill-gray-500 text-lg font-medium">
+                                Memuat grafik...
+                            </text>
+                        </svg>
+                    </div>
+                    
+                    <!-- Chart Legend -->
+                    <div class="flex justify-center mt-4">
+                        <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm border">
+                            <div class="w-6 h-3 bg-gradient-to-r from-blue-600 to-blue-400 rounded mr-3"></div>
+                            <span class="text-sm text-gray-700 font-medium">Persentase Penyelesaian Project (%)</span>
                         </div>
                     </div>
                 </div>
@@ -1048,6 +1070,235 @@
             document.getElementById('totalBelumSelesai').textContent = totalBelumSelesai;
             document.getElementById('totalProject').textContent = totalProject;
             document.getElementById('avgPersentase').textContent = avgPersentase + '%';
+            
+            // Update chart
+            renderLineChart();
+        }
+
+        // Generate area chart for completion percentage by kecamatan
+        function renderLineChart() {
+            // Group data by kecamatan
+            const kecamatanData = {};
+            
+            filteredRekapData.forEach(item => {
+                const kecamatan = item.Kecamatan || 'Tidak Diketahui';
+                if (!kecamatanData[kecamatan]) {
+                    kecamatanData[kecamatan] = {
+                        projectSelesai: 0,
+                        totalProject: 0,
+                        persentase: 0
+                    };
+                }
+                
+                kecamatanData[kecamatan].projectSelesai += parseInt(item.project_selesai) || 0;
+                kecamatanData[kecamatan].totalProject += parseInt(item.total_project) || 0;
+            });
+            
+            // Calculate percentages
+            Object.keys(kecamatanData).forEach(kec => {
+                const data = kecamatanData[kec];
+                data.persentase = data.totalProject > 0 ? 
+                    (data.projectSelesai / data.totalProject) * 100 : 0;
+            });
+            
+            // Sort by kecamatan name
+            const sortedKecamatan = Object.keys(kecamatanData).sort();
+            
+            if (sortedKecamatan.length === 0) {
+                // Show empty chart message
+                const svg = document.getElementById('lineChart');
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="emptyBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#F8FAFC;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#E2E8F0;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="0" y="0" width="800" height="400" fill="url(#emptyBg)" rx="12" />
+                    <text x="400" y="200" text-anchor="middle" class="fill-gray-500 text-lg font-medium">
+                        Tidak ada data untuk ditampilkan
+                    </text>
+                `;
+                return;
+            }
+            
+            // Chart dimensions
+            const chartWidth = 800;
+            const chartHeight = 400;
+            const margin = { top: 40, right: 60, bottom: 100, left: 80 };
+            const plotWidth = chartWidth - margin.left - margin.right;
+            const plotHeight = chartHeight - margin.top - margin.bottom;
+            
+            // Create smooth curve points
+            const xStep = plotWidth / (sortedKecamatan.length - 1 || 1);
+            const yScale = plotHeight / 100; // Percentage scale 0-100
+            
+            // Generate curve points
+            const points = sortedKecamatan.map((kec, index) => ({
+                x: margin.left + (index * xStep),
+                y: margin.top + plotHeight - (kecamatanData[kec].persentase * yScale),
+                percentage: kecamatanData[kec].persentase,
+                kecamatan: kec
+            }));
+            
+            // Create smooth curve path using cubic bezier
+            function createSmoothPath(points) {
+                if (points.length < 2) return '';
+                
+                let path = `M ${points[0].x},${points[0].y}`;
+                
+                for (let i = 1; i < points.length; i++) {
+                    const prev = points[i - 1];
+                    const curr = points[i];
+                    const next = points[i + 1];
+                    
+                    // Calculate control points for smooth curve
+                    const tension = 0.3;
+                    const cp1x = prev.x + (curr.x - (points[i - 2] ? points[i - 2].x : prev.x)) * tension;
+                    const cp1y = prev.y + (curr.y - (points[i - 2] ? points[i - 2].y : prev.y)) * tension;
+                    const cp2x = curr.x - (next ? next.x - prev.x : curr.x - prev.x) * tension;
+                    const cp2y = curr.y - (next ? next.y - prev.y : curr.y - prev.y) * tension;
+                    
+                    if (i === 1) {
+                        path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${curr.x},${curr.y}`;
+                    } else {
+                        path += ` S ${cp2x},${cp2y} ${curr.x},${curr.y}`;
+                    }
+                }
+                
+                return path;
+            }
+            
+            const curvePath = createSmoothPath(points);
+            
+            // Create area path
+            let areaPath = curvePath;
+            if (points.length > 0) {
+                const lastPoint = points[points.length - 1];
+                const firstPoint = points[0];
+                areaPath += ` L ${lastPoint.x},${margin.top + plotHeight}`;
+                areaPath += ` L ${firstPoint.x},${margin.top + plotHeight} Z`;
+            }
+            
+            // Generate SVG content with modern gradients
+            const svgContent = `
+                <defs>
+                    <!-- Chart background gradient -->
+                    <linearGradient id="chartBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#F8FAFC;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#F1F5F9;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#E2E8F0;stop-opacity:1" />
+                    </linearGradient>
+                    
+                    <!-- Area gradient -->
+                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.8" />
+                        <stop offset="30%" style="stop-color:#60A5FA;stop-opacity:0.6" />
+                        <stop offset="70%" style="stop-color:#93C5FD;stop-opacity:0.4" />
+                        <stop offset="100%" style="stop-color:#DBEAFE;stop-opacity:0.2" />
+                    </linearGradient>
+                    
+                    <!-- Line gradient -->
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#60A5FA;stop-opacity:1" />
+                    </linearGradient>
+                    
+                    <!-- Point gradient -->
+                    <radialGradient id="pointGradient" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+                        <stop offset="60%" style="stop-color:#3B82F6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+                    </radialGradient>
+                    
+                    <!-- Drop shadow filter -->
+                    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.1"/>
+                    </filter>
+                </defs>
+                
+                <!-- Chart background with rounded corners -->
+                <rect x="0" y="0" width="${chartWidth}" height="${chartHeight}" fill="url(#chartBg)" rx="16" />
+                
+                <!-- Grid lines -->
+                ${Array.from({length: 6}, (_, i) => {
+                    const y = margin.top + (plotHeight * i / 5);
+                    const value = Math.round(100 * (5 - i) / 5);
+                    return `
+                        <line x1="${margin.left}" y1="${y}" x2="${margin.left + plotWidth}" y2="${y}" 
+                              stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3" opacity="0.7" />
+                        <text x="${margin.left - 15}" y="${y + 4}" text-anchor="end" 
+                              class="fill-slate-500 text-sm font-medium">
+                            ${value}%
+                        </text>
+                    `;
+                }).join('')}
+                
+                <!-- Vertical grid lines -->
+                ${points.map((point, index) => `
+                    <line x1="${point.x}" y1="${margin.top}" x2="${point.x}" y2="${margin.top + plotHeight}" 
+                          stroke="#F1F5F9" stroke-width="1" opacity="0.5" />
+                `).join('')}
+                
+                <!-- Area fill -->
+                <path d="${areaPath}" fill="url(#areaGradient)" filter="url(#dropShadow)" />
+                
+                <!-- Main curve line -->
+                <path d="${curvePath}" stroke="url(#lineGradient)" stroke-width="4" fill="none" 
+                      stroke-linecap="round" stroke-linejoin="round" filter="url(#dropShadow)" />
+                
+                <!-- Data points -->
+                ${points.map(point => `
+                    <circle cx="${point.x}" cy="${point.y}" r="8" fill="url(#pointGradient)" 
+                            stroke="#FFFFFF" stroke-width="3" filter="url(#dropShadow)"
+                            class="hover:r-10 transition-all duration-300 cursor-pointer">
+                        <title>${point.kecamatan}: ${point.percentage.toFixed(1)}%</title>
+                    </circle>
+                    
+                    <!-- Percentage labels -->
+                    <text x="${point.x}" y="${point.y - 20}" text-anchor="middle" 
+                          class="fill-slate-700 text-sm font-bold">
+                        ${point.percentage.toFixed(1)}%
+                    </text>
+                `).join('')}
+                
+                <!-- Y-axis label -->
+                <text x="25" y="${margin.top + plotHeight/2}" text-anchor="middle" 
+                      transform="rotate(-90, 25, ${margin.top + plotHeight/2})" 
+                      class="fill-slate-600 text-base font-semibold">
+                    Persentase Penyelesaian (%)
+                </text>
+                
+                <!-- X-axis label -->
+                <text x="${margin.left + plotWidth/2}" y="${chartHeight - 15}" text-anchor="middle" 
+                      class="fill-slate-600 text-base font-semibold">
+                    Kecamatan
+                </text>
+                
+                <!-- Kecamatan labels -->
+                ${points.map(point => {
+                    const truncatedKec = point.kecamatan.length > 12 ? 
+                        point.kecamatan.substring(0, 12) + '...' : point.kecamatan;
+                    return `
+                        <text x="${point.x}" y="${margin.top + plotHeight + 25}" text-anchor="middle" 
+                              transform="rotate(-35, ${point.x}, ${margin.top + plotHeight + 25})" 
+                              class="fill-slate-600 text-sm font-medium">
+                            ${truncatedKec}
+                        </text>
+                    `;
+                }).join('')}
+                
+                <!-- Chart title -->
+                <text x="${chartWidth/2}" y="25" text-anchor="middle" 
+                      class="fill-slate-700 text-lg font-bold">
+                    Persentase Penyelesaian Project per Kecamatan
+                </text>
+            `;
+            
+            // Update SVG
+            const svg = document.getElementById('lineChart');
+            svg.innerHTML = svgContent;
         }
 
         // Export to Excel functionality
@@ -1324,5 +1575,5 @@
         `;
         document.head.appendChild(style);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96723c1e221c880b',t:'MTc1Mzg1MTAyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96732b72b5b1d976',t:'MTc1Mzg2MDgyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
