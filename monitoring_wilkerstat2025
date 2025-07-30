@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Monitoring Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Login Sistem</h1>
+                <p class="text-gray-600 mt-2">Masukkan kredensial Anda</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                    <span id="loginBtnText">Masuk</span>
+                    <svg id="loginSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+            <div id="loginError" class="mt-4 text-red-600 text-sm text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- App Loading Overlay -->
+    <div id="appLoading" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 hidden">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-16 w-16 text-blue-600 mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Memuat Sistem</h2>
+            <p class="text-gray-600 text-center">Sedang mengambil data dari server...</p>
+            <div class="mt-4 w-64 bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 70%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div class="flex items-center">
+                        <h1 class="text-3xl font-bold text-gray-900">Sistem Monitoring Data Wilkerstat SE2026 BPS Kabupaten Gresik</h1>
+                    </div>
+                    <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Status Data -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6">
+                <div class="flex">
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">
+                            <strong>Kondisi Data:</strong> <span id="kondisiData">Data diambil dari sheet kondisi_data</span>
+                        </p><br>
+						<p class="text-sm text-blue-700">
+                            <strong>Informasi Status Tagging:</strong> 
+                        </p>
+						<p class="text-sm text-green-700">
+                            <strong>Sesuai:</strong> Jika Jumlah Tagging Kurang dari 8 Tagging
+                        </p>
+						<p class="text-sm text-blue-700">
+                            <strong>Konfirmasi:</strong> Jika Jumlah Tagging Lebih dari 8 Tagging
+                        </p>
+						<p class="text-sm text-yellow-700">
+                            <strong>Belum Tagging:</strong> Jika Jumlah Tagging 0
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showPage('dataPage')" id="dataTab" class="tab-button active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        Data Utama
+                    </button>
+                    <button onclick="showPage('rekapPage')" id="rekapTab" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        Rekap Petugas
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Data Page -->
+        <div id="dataPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Score Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Data</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalData">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Sesuai</p>
+                            <p class="text-2xl font-bold text-green-600" id="sesuaiCount">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Konfirmasi</p>
+                            <p class="text-2xl font-bold text-blue-600" id="konfirmasiCount">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Belum Tagging</p>
+                            <p class="text-2xl font-bold text-yellow-600" id="belumTaggingCount">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-100 text-red-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Tidak Sesuai</p>
+                            <p class="text-2xl font-bold text-red-600" id="tidakSesuaiCount">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Data Utama</h2>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Status Tagging</label>
+                        <select id="filterStatusTagging" class="select2 w-full">
+                            <option value="">Semua Status</option>
+                            <option value="Sesuai">Sesuai</option>
+                            <option value="Konfirmasi">Konfirmasi</option>
+                            <option value="Belum Tagging">Belum Tagging</option>
+                            <option value="Tidak Sesuai">Tidak Sesuai</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Kecamatan</label>
+                        <select id="filterKecamatan" class="select2 w-full">
+                            <option value="">Semua Kecamatan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Desa</label>
+                        <select id="filterDesa" class="select2 w-full">
+                            <option value="">Semua Desa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Search and Export -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                        <input type="text" id="searchInput" placeholder="Cari data..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-700">Tampilkan:</label>
+                            <select id="recordsPerPage" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">data</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="refreshData()" id="refreshMainBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center">
+                            <svg id="refreshMainIcon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span id="refreshMainText">Refresh Data</span>
+                        </button>
+                        <button onclick="exportToExcel('main')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                            Export Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="overflow-x-auto relative">
+                    <!-- Loading Animation -->
+                    <div id="dataTableLoading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 hidden">
+                        <div class="flex flex-col items-center">
+                            <svg class="animate-spin h-12 w-12 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-gray-600 font-medium">Memuat data...</p>
+                        </div>
+                    </div>
+                    
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('idsubsls')">
+                                    ID Sub SLS <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('nmsls')">
+                                    Nama SLS <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('jenis')">
+                                    Jenis <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('kdprov')">
+                                    Kode Prov <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('kdkab')">
+                                    Kode Kab <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('kdkec')">
+                                    Kode Kec <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('nmkec')">
+                                    Nama Kec <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('kddesa')">
+                                    Kode Desa <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('nmdesa')">
+                                    Nama Desa <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('kdsls')">
+                                    Kode SLS <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('pcl')">
+                                    PCL <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('pml')">
+                                    PML <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('jumlah_tagging_batas')">
+                                    Jumlah Tagging Batas <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('jumlah_landmark_ekonomi')">
+                                    Jumlah Landmark Ekonomi <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('status_tagging')">
+                                    Status Tagging <span class="sort-arrow">↕</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-6">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan <span id="dataStart">0</span> sampai <span id="dataEnd">0</span> dari <span id="dataTotal">0</span> data
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="previousPage()" id="prevBtn" class="px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">
+                            Sebelumnya
+                        </button>
+                        <span id="pageInfo" class="px-3 py-2 text-sm text-gray-700"></span>
+                        <button onclick="nextPage()" id="nextBtn" class="px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">
+                            Selanjutnya
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rekap Page -->
+        <div id="rekapPage" class="page-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Score Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Petugas</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalPetugas">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Project Selesai</p>
+                            <p class="text-2xl font-bold text-green-600" id="totalSelesai">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-100 text-red-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Project Belum Selesai</p>
+                            <p class="text-2xl font-bold text-red-600" id="totalBelumSelesai">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Project</p>
+                            <p class="text-2xl font-bold text-yellow-600" id="totalProject">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Persentase Selesai</p>
+                            <p class="text-2xl font-bold text-blue-600" id="avgPersentase">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Rekap Petugas</h2>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Kecamatan</label>
+                        <select id="filterKecamatanRekap" class="select2 w-full">
+                            <option value="">Semua Kecamatan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Nama Petugas</label>
+                        <select id="filterPetugas" class="select2 w-full">
+                            <option value="">Semua Petugas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Search and Export -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                        <input type="text" id="searchRekapInput" placeholder="Cari petugas..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-700">Tampilkan:</label>
+                            <select id="rekapRecordsPerPage" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">data</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="refreshData()" id="refreshRekapBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center">
+                            <svg id="refreshRekapIcon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span id="refreshRekapText">Refresh Data</span>
+                        </button>
+                        <button onclick="exportToExcel('rekap')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                            Export Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rekap Table -->
+                <div class="overflow-x-auto relative">
+                    <!-- Loading Animation -->
+                    <div id="rekapTableLoading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 hidden">
+                        <div class="flex flex-col items-center">
+                            <svg class="animate-spin h-12 w-12 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-gray-600 font-medium">Memuat data...</p>
+                        </div>
+                    </div>
+                    
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('NamaPCL')">
+                                    Email <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('Nama')">
+                                    Nama <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('Kecamatan')">
+                                    Kecamatan <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('project_selesai')">
+                                    Project Selesai <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('project_belum_selesai')">
+                                    Project Belum Selesai <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('total_project')">
+                                    Total Project <span class="sort-arrow">↕</span>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortRekapTable('Persentase')">
+                                    Persentase <span class="sort-arrow">↕</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekapTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-6">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan <span id="rekapStart">0</span> sampai <span id="rekapEnd">0</span> dari <span id="rekapTotal">0</span> data
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="previousRekapPage()" id="prevRekapBtn" class="px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">
+                            Sebelumnya
+                        </button>
+                        <span id="rekapPageInfo" class="px-3 py-2 text-sm text-gray-700"></span>
+                        <button onclick="nextRekapPage()" id="nextRekapBtn" class="px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">
+                            Selanjutnya
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script URL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxVEB7UZ--G4U_tt3nR-iw6bWKQX1eRYPqv-x-lIEYz8x80uvTyhhUU6_oIwwsjBIUw/exec';
+        
+        let mainData = [];
+        let rekapData = [];
+        let filteredMainData = [];
+        let filteredRekapData = [];
+        let currentPage = 1;
+        let currentRekapPage = 1;
+        let itemsPerPage = 25;
+        let rekapItemsPerPage = 25;
+
+        // App loading functions
+        function showAppLoading() {
+            document.getElementById('appLoading').classList.remove('hidden');
+        }
+
+        function hideAppLoading() {
+            document.getElementById('appLoading').classList.add('hidden');
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Show loading animation
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            
+            loginBtn.disabled = true;
+            loginBtnText.textContent = 'Memproses...';
+            loginSpinner.classList.remove('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${GAS_URL}?action=authenticate&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    loginBtnText.textContent = 'Berhasil!';
+                    setTimeout(async () => {
+                        document.getElementById('loginPage').classList.add('hidden');
+                        document.getElementById('mainApp').classList.remove('hidden');
+                        showAppLoading();
+                        await initializeApp();
+                        hideAppLoading();
+                    }, 500);
+                } else {
+                    document.getElementById('loginError').textContent = result.message || 'Username atau password salah!';
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('loginError').textContent = 'Terjadi kesalahan koneksi!';
+                document.getElementById('loginError').classList.remove('hidden');
+            } finally {
+                // Reset button state
+                setTimeout(() => {
+                    loginBtn.disabled = false;
+                    loginBtnText.textContent = 'Masuk';
+                    loginSpinner.classList.add('hidden');
+                }, 1000);
+            }
+        });
+
+        // Enable Enter key for login
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('password').focus();
+            }
+        });
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        function logout() {
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        async function initializeApp() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'default',
+                width: '100%'
+            });
+
+            // Load data from Google Apps Script
+            await loadMainData();
+            await loadRekapData();
+            await loadKondisiData();
+            
+            // Load scorecard data from server first, then ensure local calculation as backup
+            await loadScoreCardData();
+            
+            // Populate filters
+            populateFilters();
+            
+            // Setup search functionality
+            setupSearch();
+            
+            // Setup records per page functionality
+            setupRecordsPerPage();
+            
+            // Initial render
+            renderMainTable();
+            renderRekapTable();
+            
+            // Ensure scorecards are updated with local data if server data failed
+            updateScoreCards();
+            updateRekapScoreCards();
+        }
+
+        // Load data from Google Apps Script
+        async function loadMainData() {
+            try {
+                const response = await fetch(`${GAS_URL}?action=getMainData`);
+                mainData = await response.json();
+                filteredMainData = [...mainData];
+            } catch (error) {
+                console.error('Error loading main data:', error);
+                mainData = [];
+                filteredMainData = [];
+            }
+        }
+
+        async function loadRekapData() {
+            try {
+                const response = await fetch(`${GAS_URL}?action=getRekapData`);
+                rekapData = await response.json();
+                filteredRekapData = [...rekapData];
+            } catch (error) {
+                console.error('Error loading rekap data:', error);
+                rekapData = [];
+                filteredRekapData = [];
+            }
+        }
+
+        async function loadKondisiData() {
+            try {
+                const response = await fetch(`${GAS_URL}?action=getKondisiData`);
+                const result = await response.json();
+                const kondisiText = result.kondisi || 'Data diambil dari sheet kondisi_data';
+                document.getElementById('kondisiData').textContent = kondisiText;
+            } catch (error) {
+                console.error('Error loading kondisi data:', error);
+                document.getElementById('kondisiData').textContent = 'Data diambil dari sheet kondisi_data';
+            }
+        }
+
+        async function loadScoreCardData() {
+            try {
+                const response = await fetch(`${GAS_URL}?action=getScoreCardData`);
+                const result = await response.json();
+                
+                // Update main data scorecards
+                if (result.mainData) {
+                    document.getElementById('totalData').textContent = result.mainData.totalData || 0;
+                    document.getElementById('sesuaiCount').textContent = result.mainData.sesuai || 0;
+                    document.getElementById('konfirmasiCount').textContent = result.mainData.konfirmasi || 0;
+                    document.getElementById('belumTaggingCount').textContent = result.mainData.belumTagging || 0;
+                    document.getElementById('tidakSesuaiCount').textContent = result.mainData.tidakSesuai || 0;
+                }
+                
+                // Update rekap data scorecards
+                if (result.rekapData) {
+                    document.getElementById('totalPetugas').textContent = result.rekapData.totalPetugas || 0;
+                    document.getElementById('totalSelesai').textContent = result.rekapData.totalSelesai || 0;
+                    document.getElementById('totalBelumSelesai').textContent = result.rekapData.totalBelumSelesai || 0;
+                    document.getElementById('totalProject').textContent = result.rekapData.totalProject || 0;
+                    document.getElementById('avgPersentase').textContent = (result.rekapData.avgPersentase || 0) + '%';
+                }
+            } catch (error) {
+                console.error('Error loading scorecard data from server, using local calculation:', error);
+                // Always fallback to local calculation to ensure scorecards show data
+                updateScoreCards();
+                updateRekapScoreCards();
+            }
+        }
+
+        // Show/hide loading animation
+        function showDataTableLoading() {
+            document.getElementById('dataTableLoading').classList.remove('hidden');
+        }
+
+        function hideDataTableLoading() {
+            document.getElementById('dataTableLoading').classList.add('hidden');
+        }
+
+        function showRekapTableLoading() {
+            document.getElementById('rekapTableLoading').classList.remove('hidden');
+        }
+
+        function hideRekapTableLoading() {
+            document.getElementById('rekapTableLoading').classList.add('hidden');
+        }
+
+        // Render main data table
+        function renderMainTable() {
+            showDataTableLoading();
+            
+            // Simulate loading delay for better UX
+            setTimeout(() => {
+                const tbody = document.getElementById('dataTableBody');
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageData = filteredMainData.slice(start, end);
+                
+                tbody.innerHTML = '';
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="15" class="px-6 py-4 text-center text-gray-500">Tidak ada data</td></tr>';
+                } else {
+                    pageData.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.idsubsls || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.nmsls || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.jenis || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.kdprov || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.kdkab || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.kdkec || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.nmkec || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.kddesa || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.nmdesa || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.kdsls || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.pcl || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.pml || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.jumlah_tagging_batas || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.jumlah_landmark_ekonomi || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status_tagging)}">${item.status_tagging || ''}</span>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                updatePagination();
+                hideDataTableLoading();
+            }, 300);
+        }
+
+        // Render rekap table
+        function renderRekapTable() {
+            showRekapTableLoading();
+            
+            // Simulate loading delay for better UX
+            setTimeout(() => {
+                const tbody = document.getElementById('rekapTableBody');
+                const start = (currentRekapPage - 1) * rekapItemsPerPage;
+                const end = start + rekapItemsPerPage;
+                const pageData = filteredRekapData.slice(start, end);
+                
+                tbody.innerHTML = '';
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data</td></tr>';
+                } else {
+                    pageData.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.NamaPCL || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.Nama || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.Kecamatan || ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.project_selesai || 0}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.project_belum_selesai || 0}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.total_project || 0}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="px-2 py-1 rounded-full text-sm font-medium ${getPercentageColor(item.Persentase)}">${parseFloat(item.Persentase || 0).toFixed(2)}%</span>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                updateRekapPagination();
+                hideRekapTableLoading();
+            }, 300);
+        }
+
+        // Helper functions for colors
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Sesuai':
+                    return 'bg-green-100 text-green-800';
+                case 'Konfirmasi':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Belum Tagging':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Tidak Sesuai':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getPercentageColor(percentage) {
+            const pct = parseInt(percentage) || 0;
+            if (pct < 50) {
+                return 'bg-red-100 text-red-800';
+            } else if (pct >= 50 && pct <= 90) {
+                return 'bg-yellow-100 text-yellow-800';
+            } else {
+                return 'bg-green-100 text-green-800';
+            }
+        }
+
+        // Pagination functions
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredMainData.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, filteredMainData.length);
+            
+            document.getElementById('dataStart').textContent = filteredMainData.length > 0 ? start : 0;
+            document.getElementById('dataEnd').textContent = end;
+            document.getElementById('dataTotal').textContent = filteredMainData.length;
+            document.getElementById('pageInfo').textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function updateRekapPagination() {
+            const totalPages = Math.ceil(filteredRekapData.length / rekapItemsPerPage);
+            const start = (currentRekapPage - 1) * rekapItemsPerPage + 1;
+            const end = Math.min(currentRekapPage * rekapItemsPerPage, filteredRekapData.length);
+            
+            document.getElementById('rekapStart').textContent = filteredRekapData.length > 0 ? start : 0;
+            document.getElementById('rekapEnd').textContent = end;
+            document.getElementById('rekapTotal').textContent = filteredRekapData.length;
+            document.getElementById('rekapPageInfo').textContent = `Halaman ${currentRekapPage} dari ${totalPages}`;
+            
+            document.getElementById('prevRekapBtn').disabled = currentRekapPage === 1;
+            document.getElementById('nextRekapBtn').disabled = currentRekapPage === totalPages || totalPages === 0;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredMainData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderMainTable();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderMainTable();
+            }
+        }
+
+        function nextRekapPage() {
+            const totalPages = Math.ceil(filteredRekapData.length / rekapItemsPerPage);
+            if (currentRekapPage < totalPages) {
+                currentRekapPage++;
+                renderRekapTable();
+            }
+        }
+
+        function previousRekapPage() {
+            if (currentRekapPage > 1) {
+                currentRekapPage--;
+                renderRekapTable();
+            }
+        }
+
+        // Filter functions
+        function populateFilters() {
+            // Clear existing options
+            $('#filterKecamatan, #filterKecamatanRekap').find('option:not(:first)').remove();
+            $('#filterDesa').find('option:not(:first)').remove();
+            $('#filterPetugas').find('option:not(:first)').remove();
+
+            // Populate Kecamatan filters
+            const kecamatans = [...new Set(mainData.map(item => item.nmkec))].filter(Boolean);
+            kecamatans.sort().forEach(kec => {
+                $('#filterKecamatan, #filterKecamatanRekap').append(`<option value="${kec}">${kec}</option>`);
+            });
+
+            // Populate Desa filters (only for main data page)
+            const desas = [...new Set(mainData.map(item => item.nmdesa))].filter(Boolean);
+            desas.sort().forEach(desa => {
+                $('#filterDesa').append(`<option value="${desa}">${desa}</option>`);
+            });
+
+            // Populate Petugas filter
+            const petugas = [...new Set(rekapData.map(item => item.Nama))].filter(Boolean);
+            petugas.sort().forEach(nama => {
+                $('#filterPetugas').append(`<option value="${nama}">${nama}</option>`);
+            });
+
+            // Add filter event listeners
+            $('#filterStatusTagging, #filterKecamatan, #filterDesa').on('change', function() {
+                applyDataFilters();
+            });
+
+            $('#filterKecamatanRekap, #filterPetugas').on('change', function() {
+                applyRekapFilters();
+            });
+        }
+
+        function applyDataFilters() {
+            const statusFilter = $('#filterStatusTagging').val();
+            const kecFilter = $('#filterKecamatan').val();
+            const desaFilter = $('#filterDesa').val();
+
+            filteredMainData = mainData.filter(item => {
+                const statusMatch = !statusFilter || item.status_tagging === statusFilter;
+                const kecMatch = !kecFilter || item.nmkec === kecFilter;
+                const desaMatch = !desaFilter || item.nmdesa === desaFilter;
+                return statusMatch && kecMatch && desaMatch;
+            });
+
+            currentPage = 1;
+            renderMainTable();
+            updateScoreCards();
+        }
+
+        function applyRekapFilters() {
+            const kecFilter = $('#filterKecamatanRekap').val();
+            const petugasFilter = $('#filterPetugas').val();
+
+            filteredRekapData = rekapData.filter(item => {
+                const kecMatch = !kecFilter || item.Kecamatan === kecFilter;
+                const petugasMatch = !petugasFilter || item.Nama === petugasFilter;
+                return kecMatch && petugasMatch;
+            });
+
+            currentRekapPage = 1;
+            renderRekapTable();
+            updateRekapScoreCards();
+        }
+
+        // Search functionality
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                if (searchTerm === '') {
+                    applyDataFilters();
+                } else {
+                    filteredMainData = mainData.filter(item => {
+                        return Object.values(item).some(value => 
+                            String(value).toLowerCase().includes(searchTerm)
+                        );
+                    });
+                    currentPage = 1;
+                    renderMainTable();
+                }
+            });
+
+            document.getElementById('searchRekapInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                if (searchTerm === '') {
+                    applyRekapFilters();
+                } else {
+                    filteredRekapData = rekapData.filter(item => {
+                        return Object.values(item).some(value => 
+                            String(value).toLowerCase().includes(searchTerm)
+                        );
+                    });
+                    currentRekapPage = 1;
+                    renderRekapTable();
+                }
+            });
+        }
+
+        // Records per page functionality
+        function setupRecordsPerPage() {
+            document.getElementById('recordsPerPage').addEventListener('change', function(e) {
+                itemsPerPage = parseInt(e.target.value);
+                currentPage = 1;
+                renderMainTable();
+            });
+
+            document.getElementById('rekapRecordsPerPage').addEventListener('change', function(e) {
+                rekapItemsPerPage = parseInt(e.target.value);
+                currentRekapPage = 1;
+                renderRekapTable();
+            });
+        }
+
+        // Update score cards
+        function updateScoreCards() {
+            const totalData = filteredMainData.length;
+            
+            // Get unique status values and count them
+            const statusCounts = {};
+            filteredMainData.forEach(item => {
+                const status = item.status_tagging || 'Tidak Diketahui';
+                statusCounts[status] = (statusCounts[status] || 0) + 1;
+            });
+
+            document.getElementById('totalData').textContent = totalData;
+            document.getElementById('sesuaiCount').textContent = statusCounts['Sesuai'] || 0;
+            document.getElementById('konfirmasiCount').textContent = statusCounts['Konfirmasi'] || 0;
+            document.getElementById('belumTaggingCount').textContent = statusCounts['Belum Tagging'] || 0;
+            document.getElementById('tidakSesuaiCount').textContent = statusCounts['Tidak Sesuai'] || 0;
+        }
+
+        function updateRekapScoreCards() {
+            // Total Petugas: jumlah record dari sheet rekap_petugas
+            const totalPetugas = filteredRekapData.length;
+            
+            // Project Selesai: jumlah dari kolom project_selesai
+            const totalSelesai = filteredRekapData.reduce((sum, item) => sum + (parseInt(item.project_selesai) || 0), 0);
+            
+            // Project Belum Selesai: jumlah dari kolom project_belum_selesai
+            const totalBelumSelesai = filteredRekapData.reduce((sum, item) => sum + (parseInt(item.project_belum_selesai) || 0), 0);
+            
+            // Total Project: jumlah dari kolom total_project
+            const totalProject = filteredRekapData.reduce((sum, item) => sum + (parseInt(item.total_project) || 0), 0);
+            
+            // Persentase Selesai: (Project Selesai / Total Project) * 100
+            const avgPersentase = totalProject > 0 ? 
+                ((totalSelesai / totalProject) * 100).toFixed(2) : '0.00';
+
+            document.getElementById('totalPetugas').textContent = totalPetugas;
+            document.getElementById('totalSelesai').textContent = totalSelesai;
+            document.getElementById('totalBelumSelesai').textContent = totalBelumSelesai;
+            document.getElementById('totalProject').textContent = totalProject;
+            document.getElementById('avgPersentase').textContent = avgPersentase + '%';
+        }
+
+        // Export to Excel functionality
+        function exportToExcel(type) {
+            const data = type === 'main' ? filteredMainData : filteredRekapData;
+            const filename = type === 'main' ? 'Data_Utama.xlsx' : 'Rekap_Petugas.xlsx';
+            
+            if (data.length === 0) {
+                alert('Tidak ada data untuk diekspor');
+                return;
+            }
+
+            try {
+                // Create a new workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Convert data to worksheet
+                const ws = XLSX.utils.json_to_sheet(data);
+                
+                // Add worksheet to workbook
+                const sheetName = type === 'main' ? 'Data Utama' : 'Rekap Petugas';
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                
+                // Auto-size columns
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                const colWidths = [];
+                
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    let maxWidth = 10;
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+                        const cell = ws[cellAddress];
+                        if (cell && cell.v) {
+                            const cellLength = cell.v.toString().length;
+                            if (cellLength > maxWidth) {
+                                maxWidth = cellLength;
+                            }
+                        }
+                    }
+                    colWidths.push({wch: Math.min(maxWidth + 2, 50)});
+                }
+                ws['!cols'] = colWidths;
+                
+                // Write file
+                XLSX.writeFile(wb, filename);
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                alert('Terjadi kesalahan saat mengekspor data');
+            }
+        }
+
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const activeTab = pageId === 'dataPage' ? 'dataTab' : 'rekapTab';
+            const tab = document.getElementById(activeTab);
+            tab.classList.add('active', 'border-blue-500', 'text-blue-600');
+            tab.classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        // Sorting functionality
+        let sortColumn = '';
+        let sortDirection = 'asc';
+        let rekapSortColumn = '';
+        let rekapSortDirection = 'asc';
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredMainData.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+                
+                // Convert to numbers if they are numeric
+                if (!isNaN(aVal) && !isNaN(bVal)) {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else {
+                    aVal = String(aVal).toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                }
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update sort arrows
+            document.querySelectorAll('.sort-arrow').forEach(arrow => {
+                arrow.textContent = '↕';
+            });
+            
+            const currentHeader = document.querySelector(`th[onclick="sortTable('${column}')"] .sort-arrow`);
+            if (currentHeader) {
+                currentHeader.textContent = sortDirection === 'asc' ? '↑' : '↓';
+            }
+
+            currentPage = 1;
+            renderMainTable();
+        }
+
+        function sortRekapTable(column) {
+            if (rekapSortColumn === column) {
+                rekapSortDirection = rekapSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                rekapSortColumn = column;
+                rekapSortDirection = 'asc';
+            }
+
+            filteredRekapData.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+                
+                // Convert to numbers if they are numeric
+                if (!isNaN(aVal) && !isNaN(bVal)) {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else {
+                    aVal = String(aVal).toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                }
+
+                if (rekapSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update sort arrows for rekap table
+            document.querySelectorAll('#rekapPage .sort-arrow').forEach(arrow => {
+                arrow.textContent = '↕';
+            });
+            
+            const currentHeader = document.querySelector(`th[onclick="sortRekapTable('${column}')"] .sort-arrow`);
+            if (currentHeader) {
+                currentHeader.textContent = rekapSortDirection === 'asc' ? '↑' : '↓';
+            }
+
+            currentRekapPage = 1;
+            renderRekapTable();
+        }
+
+        // Refresh data functionality
+        async function refreshData() {
+            const refreshMainBtn = document.getElementById('refreshMainBtn');
+            const refreshRekapBtn = document.getElementById('refreshRekapBtn');
+            const refreshMainIcon = document.getElementById('refreshMainIcon');
+            const refreshRekapIcon = document.getElementById('refreshRekapIcon');
+            const refreshMainText = document.getElementById('refreshMainText');
+            const refreshRekapText = document.getElementById('refreshRekapText');
+            
+            // Disable buttons and show loading state
+            if (refreshMainBtn) {
+                refreshMainBtn.disabled = true;
+                refreshMainIcon.classList.add('animate-spin');
+                refreshMainText.textContent = 'Memuat...';
+            }
+            
+            if (refreshRekapBtn) {
+                refreshRekapBtn.disabled = true;
+                refreshRekapIcon.classList.add('animate-spin');
+                refreshRekapText.textContent = 'Memuat...';
+            }
+            
+            try {
+                // Reload all data
+                await loadMainData();
+                await loadRekapData();
+                await loadKondisiData();
+                await loadScoreCardData();
+                
+                // Reset filters and pagination
+                $('#filterStatusTagging, #filterKecamatan, #filterDesa, #filterKecamatanRekap, #filterPetugas').val('').trigger('change');
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchRekapInput').value = '';
+                
+                currentPage = 1;
+                currentRekapPage = 1;
+                
+                // Repopulate filters
+                populateFilters();
+                
+                // Re-render tables and update scorecards
+                renderMainTable();
+                renderRekapTable();
+                updateScoreCards();
+                updateRekapScoreCards();
+                
+                // Show success message briefly
+                if (refreshMainText) refreshMainText.textContent = 'Berhasil!';
+                if (refreshRekapText) refreshRekapText.textContent = 'Berhasil!';
+                
+                setTimeout(() => {
+                    if (refreshMainText) refreshMainText.textContent = 'Refresh Data';
+                    if (refreshRekapText) refreshRekapText.textContent = 'Refresh Data';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                
+                // Show error message
+                if (refreshMainText) refreshMainText.textContent = 'Error!';
+                if (refreshRekapText) refreshRekapText.textContent = 'Error!';
+                
+                setTimeout(() => {
+                    if (refreshMainText) refreshMainText.textContent = 'Refresh Data';
+                    if (refreshRekapText) refreshRekapText.textContent = 'Refresh Data';
+                }, 2000);
+            } finally {
+                // Re-enable buttons and stop loading animation
+                setTimeout(() => {
+                    if (refreshMainBtn) {
+                        refreshMainBtn.disabled = false;
+                        refreshMainIcon.classList.remove('animate-spin');
+                    }
+                    
+                    if (refreshRekapBtn) {
+                        refreshRekapBtn.disabled = false;
+                        refreshRekapIcon.classList.remove('animate-spin');
+                    }
+                }, 1000);
+            }
+        }
+
+        // CSS for active tab and sorting
+        const style = document.createElement('style');
+        style.textContent = `
+            .tab-button.active {
+                border-color: #3B82F6 !important;
+                color: #3B82F6 !important;
+            }
+            .select2-container--default .select2-selection--single {
+                height: 38px;
+                border: 1px solid #D1D5DB;
+                border-radius: 0.375rem;
+            }
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 36px;
+                padding-left: 12px;
+            }
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 36px;
+            }
+            .sort-arrow {
+                margin-left: 5px;
+                font-size: 12px;
+                color: #9CA3AF;
+            }
+            th:hover .sort-arrow {
+                color: #374151;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96723c1e221c880b',t:'MTc1Mzg1MTAyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
