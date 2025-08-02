@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Produk Toko</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .search-input {
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            transform: scale(1.02);
+        }
+        
+        .price-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .corner-ribbon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 8px 24px 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transform: translateX(-8px) translateY(8px) rotate(-45deg);
+            transform-origin: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .corner-ribbon::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            border-left: 4px solid #047857;
+            border-bottom: 4px solid transparent;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header Toko -->
+    <header id="tokoHeader" class="bg-white shadow-lg mb-8">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-center space-x-4">
+                <div id="tokoIcon" class="w-16 h-16 rounded-full overflow-hidden shadow-md">
+                    <!-- Icon toko akan dimuat di sini -->
+                </div>
+                <div class="text-center">
+                    <h1 id="namaToko" class="text-3xl font-bold text-gray-800 mb-1">Loading...</h1>
+                    <p id="alamatToko" class="text-gray-600">Loading alamat...</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6">
+        <!-- Search Bar -->
+        <div class="mb-8 flex justify-center">
+            <div class="relative w-full max-w-md">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Cari nama produk..." 
+                    class="search-input w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-blue-500 shadow-lg"
+                >
+                <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loadingContainer" class="flex flex-col items-center justify-center py-16">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-gray-600 text-lg">Memuat produk...</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="productsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-12" style="display: none;">
+            <!-- Produk akan dimuat di sini -->
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="text-center py-16" style="display: none;">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">Produk tidak ditemukan</h3>
+            <p class="text-gray-500">Coba kata kunci lain untuk pencarian Anda</p>
+        </div>
+
+        <!-- Pagination -->
+        <div id="paginationContainer" class="flex justify-center items-center space-x-4 py-8" style="display: none;">
+            <button id="prevBtn" class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                ← Sebelumnya
+            </button>
+            <div id="pageInfo" class="text-gray-600 font-medium">
+                Halaman 1 dari 1
+            </div>
+            <button id="nextBtn" class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Selanjutnya →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let allProducts = [];
+        let filteredProducts = [];
+        let currentPage = 1;
+        let productsPerPage = 12;
+        let searchTimeout;
+        let currentTokoData = null;
+        
+        // URL Google Apps Script Anda
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxitLH2GEu725puIMHhLklFcBVeOGkLsTsfJY0-vlsYCM3Ltu0F7JjIJ7gn4nnJLkx2/exec';
+
+        // Load data toko dan produk saat halaman dimuat
+        window.onload = function() {
+            loadTokoData();
+            loadProducts();
+        };
+
+        function loadTokoData() {
+            fetch(`${SCRIPT_URL}?action=getToko`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayTokoData(data.data);
+                    } else {
+                        console.error('Error loading toko data:', data.error);
+                        displayDefaultToko();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching toko data:', error);
+                    displayDefaultToko();
+                });
+        }
+
+        function displayTokoData(tokoData) {
+            if (tokoData) {
+                currentTokoData = tokoData;
+                document.getElementById('namaToko').textContent = tokoData.nama_toko || 'Nama Toko';
+                document.getElementById('alamatToko').textContent = tokoData.alamat || 'Alamat Toko';
+                
+                const iconContainer = document.getElementById('tokoIcon');
+                if (tokoData.icon) {
+                    iconContainer.innerHTML = `<img src="${tokoData.icon}" alt="Icon Toko" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSIxNiIgeT0iMTYiIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAyQzEzLjEgMiAxNCAyLjkgMTQgNFY2SDE5QzIwLjEgNiAyMSA2LjkgMjEgOFYxOUMyMSAyMC4xIDIwLjEgMjEgMTkgMjFINUMzLjkgMjEgMyAyMC4xIDMgMTlWOEMzIDYuOSAzLjkgNiA1IDZIMTBWNEMxMCAyLjkgMTAuOSAyIDEyIDJaTTEyIDRWNkgxMlY0WiIvPgo8L3N2Zz4KPC9zdmc+'">`;
+                } else {
+                    iconContainer.innerHTML = `
+                        <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C13.1 2 14 2.9 14 4V6H19C20.1 6 21 6.9 21 8V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V8C3 6.9 3.9 6 5 6H10V4C10 2.9 10.9 2 12 2ZM12 4V6H12V4Z"/>
+                            </svg>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function displayDefaultToko() {
+            document.getElementById('namaToko').textContent = 'Toko Online';
+            document.getElementById('alamatToko').textContent = 'Alamat Toko';
+            
+            const iconContainer = document.getElementById('tokoIcon');
+            iconContainer.innerHTML = `
+                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C13.1 2 14 2.9 14 4V6H19C20.1 6 21 6.9 21 8V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V8C3 6.9 3.9 6 5 6H10V4C10 2.9 10.9 2 12 2ZM12 4V6H12V4Z"/>
+                    </svg>
+                </div>
+            `;
+        }
+
+        function loadProducts(searchTerm = '') {
+            if (searchTerm && allProducts.length > 0) {
+                // Filter locally if we already have data
+                filteredProducts = allProducts.filter(product => 
+                    product.nama_produk && 
+                    product.nama_produk.toString().toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                currentPage = 1;
+                renderCurrentPage();
+            } else if (!searchTerm && allProducts.length > 0) {
+                // Show all products if no search term
+                filteredProducts = allProducts;
+                currentPage = 1;
+                renderCurrentPage();
+            } else {
+                // Fetch from server
+                showLoading();
+                
+                const url = searchTerm ? 
+                    `${SCRIPT_URL}?action=getProduk&search=${encodeURIComponent(searchTerm)}` : 
+                    `${SCRIPT_URL}?action=getProduk`;
+                    
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            displayProducts(data.data);
+                        } else {
+                            console.error('Error loading products:', data.error);
+                            handleError(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching products:', error);
+                        handleError(error);
+                    });
+            }
+        }
+
+        function displayProducts(products) {
+            hideLoading();
+            allProducts = products;
+            filteredProducts = products;
+            currentPage = 1;
+            renderCurrentPage();
+        }
+
+        function renderCurrentPage() {
+            const container = document.getElementById('productsContainer');
+            const noResults = document.getElementById('noResults');
+            const pagination = document.getElementById('paginationContainer');
+            
+            if (filteredProducts.length === 0) {
+                container.style.display = 'none';
+                pagination.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            container.style.display = 'grid';
+            container.innerHTML = '';
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+            const startIndex = (currentPage - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const currentProducts = filteredProducts.slice(startIndex, endIndex);
+            
+            // Display products
+            currentProducts.forEach((product, index) => {
+                const productCard = createProductCard(product);
+                productCard.style.animationDelay = `${index * 0.1}s`;
+                container.appendChild(productCard);
+            });
+            
+            // Update pagination
+            updatePagination(totalPages);
+        }
+
+        function updatePagination(totalPages) {
+            const pagination = document.getElementById('paginationContainer');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card bg-white rounded-2xl shadow-lg overflow-hidden fade-in';
+            
+            const imageUrl = product.gambar_produk || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxzdmcgeD0iMTI1IiB5PSI3NSIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiM5Q0EzQUYiPgo8cGF0aCBkPSJNMjEgMTlWNUgyMVYxOUgyMVpNMjEgM0EyIDIgMCAwIDEgMjMgNVYxOUEyIDIgMCAwIDEgMjEgMjFIM0EyIDIgMCAwIDEgMSAxOVY1QTIgMiAwIDAgMSAzIDNIMjFaTTUgMTVIMTlWMTdINVYxNVpNNSAxMUgxOVYxM0g1VjExWk01IDdIMTlWOUg1VjdaIi8+Cjwvc3ZnPgo8L3N2Zz4=';
+            
+            const tokoName = product.nama_toko || currentTokoData?.nama_toko || 'Toko';
+            
+            card.innerHTML = `
+                <div class="relative bg-gray-50 overflow-hidden">
+                    <div class="corner-ribbon">${tokoName}</div>
+                    <img src="${imageUrl}" alt="${product.nama_produk}" class="w-full h-56 object-contain p-4" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxzdmcgeD0iMTI1IiB5PSI3NSIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiM5Q0EzQUYiPgo8cGF0aCBkPSJNMjEgMTlWNUgyMVYxOUgyMVpNMjEgM0EyIDIgMCAwIDEgMjMgNVYxOUEyIDIgMCAwIDEgMjEgMjFIM0EyIDIgMCAwIDEgMSAxOVY1QTIgMiAwIDAgMSAzIDNIMjFaTTUgMTVIMTlWMTdINVYxNVpNNSAxMUgxOVYxM0g1VjExWk01IDdIMTlWOUg1VjdaIi8+Cjwvc3ZnPgo8L3N2Zz4='">
+                    <div class="absolute top-3 right-3 price-tag text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                        ${formatPrice(product.harga_produk)}
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">${product.nama_produk || 'Nama Produk'}</h3>
+                    <p class="text-sm text-gray-500 mb-4">Kode: ${product.kode_produk || '-'}</p>
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-lg text-center shadow-md">
+                        <span class="text-xl font-bold">${formatPrice(product.harga_produk)}</span>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function formatPrice(price) {
+            if (!price) return 'Rp 0';
+            return 'Rp ' + parseInt(price).toLocaleString('id-ID');
+        }
+
+        function showLoading() {
+            document.getElementById('loadingContainer').style.display = 'flex';
+            document.getElementById('productsContainer').style.display = 'none';
+            document.getElementById('noResults').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingContainer').style.display = 'none';
+        }
+
+        function handleError(error) {
+            hideLoading();
+            console.error('Error:', error);
+            document.getElementById('noResults').style.display = 'block';
+            document.getElementById('noResults').innerHTML = `
+                <div class="text-6xl mb-4">⚠️</div>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-2">Terjadi Kesalahan</h3>
+                <p class="text-gray-500">Gagal memuat data. Silakan coba lagi.</p>
+            `;
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const searchTerm = e.target.value.trim();
+            
+            searchTimeout = setTimeout(() => {
+                loadProducts(searchTerm);
+            }, 500);
+        });
+
+        // Enter key search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                const searchTerm = e.target.value.trim();
+                loadProducts(searchTerm);
+            }
+        });
+
+        // Pagination event listeners
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968b164965fc658f',t:'MTc1NDExMTYxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
